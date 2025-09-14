@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker 🎯</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#111827"/>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #111827;       /* gray-900 */
+            --bg-secondary: #1f2937;    /* gray-800 */
+            --bg-card: rgba(31, 41, 55, 0.6); /* gray-800 com transparência */
+            --border-color: #374151;    /* gray-700 */
+            --accent-primary: #818cf8;  /* indigo-400 */
+            --accent-secondary: #6366f1;/* indigo-500 */
+            --text-primary: #f9fafb;    /* gray-50 */
+            --text-secondary: #9ca3af;  /* gray-400 */
+            --success: #4ade80;         /* green-400 */
+            --danger: #f87171;          /* red-400 */
+            --warning: #facc15;         /* yellow-400 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(129, 140, 248, 0.1) 1px, transparent 0),
+                radial-gradient(circle at top left, rgba(129, 140, 248, 0.15), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.15), transparent 40%);
+            background-size: 20px 20px, 100% 100%, 100% 100%;
+        }
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .form-input, .form-select, .form-date {
+            background-color: rgba(17, 24, 39, 0.7);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            border-radius: 0.375rem;
+        }
+        .form-input:focus, .form-select:focus, .form-date:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .form-date::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+        }
+        .btn {
+            background-color: var(--accent-secondary);
+            color: white;
+            transition: all 0.3s ease;
+            border: 1px solid var(--accent-primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s ease;
+        }
+        .btn:hover:before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .btn:hover {
+            background-color: var(--accent-primary);
+            box-shadow: 0 0 25px rgba(129, 140, 248, 0.5);
+            transform: translateY(-2px);
+        }
+        .btn:disabled { background-color: #374151; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-red { background-color: #991b1b; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+        .btn-red:hover { background-color: #b91c1c; box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
+        .btn-green { background-color: #047857; border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+        .btn-green:hover { background-color: #059669; box-shadow: 0 0 25px rgba(16, 185, 129, 0.5); }
+        .btn-secondary { background-color: var(--border-color); border-color: #4b5563; box-shadow: none; }
+        .btn-secondary:hover { background-color: #4b5563; transform: translateY(-2px); }
+        .nav-link {
+            color: var(--text-secondary);
+            position: relative;
+            transition: all 0.3s ease;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .nav-link:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 0;
+            width: 4px;
+            background-color: var(--accent-primary);
+            border-radius: 0 4px 4px 0;
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--text-primary);
+        }
+        .nav-link.active {
+            background-color: rgba(99, 102, 241, 0.15);
+            color: white;
+            font-weight: 600;
+        }
+        .nav-link.active:before {
+            height: 60%;
+        }
+        .modal { display: none; }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            z-index: 50;
+            inset: 0;
+            background-color: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(8px);
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .table-custom th, .table-custom td { padding: 1rem; border-bottom: 1px solid var(--border-color); text-align: left; }
+        .table-custom tbody tr:hover { background-color: rgba(31, 41, 55, 0.5); }
+        .status-indicator { font-size: 0.75rem; font-weight: 500; padding: 0.25rem 0.6rem; border-radius: 9999px; display: inline-block; margin-left: 0.75rem; vertical-align: middle; }
+        .status-indicator.success { background: linear-gradient(to right, rgba(74, 222, 128, 0.1), rgba(16, 185, 129, 0.1)); color: var(--success); border: 1px solid rgba(74, 222, 128, 0.2); }
+        .status-indicator.failure { background: linear-gradient(to right, rgba(248, 113, 113, 0.1), rgba(185, 28, 28, 0.1)); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.2); }
+        .status-indicator.unknown { background-color: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.2); }
+        .status-indicator.testing { background: linear-gradient(to right, rgba(129, 140, 248, 0.1), rgba(99, 102, 241, 0.1)); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.2); }
+        .tab-button { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 0.5rem 1rem; border-radius: 0.375rem; transition: all 0.3s ease; }
+        .tab-button:hover { background-color: var(--bg-secondary); color: var(--text-primary); }
+        .tab-button.active { background-color: rgba(99, 102, 241, 0.1); border-color: var(--accent-secondary); color: white; font-weight: 600; box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease-out; }
+        .progress-bar { background-color: #374151; border-radius: 999px; overflow: hidden; height: 8px; }
+        .progress-bar-inner { height: 100%; transition: width 0.5s ease; }
+        .metric-card { position: relative; overflow: hidden; border-radius: 0.75rem; padding: 1.5rem; text-align: center; }
+        .metric-card:before { content: ''; position: absolute; top: -50%; left: -50%; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 70%); transition: transform 0.8s ease; transform-origin: center center; transform: scale(0); }
+        .metric-card:hover:before { transform: scale(3); }
+        #app-loader { display: flex; align-items: center; justify-content: center; height: 100vh; font-size: 1.25rem; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="app-loader">
+            <svg class="animate-spin h-8 w-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="ml-3">Carregando...</span>
+        </div>
+    </div>
+    <div id="modal-container"></div>
+
+<script>
+    const App = {
+        state: {
+            API_BASE_URL: 'http://localhost:3000',
+            token: null,
+            data: {
+                pixels: [], bots: [], pressels: [], checkouts: [],
+                settings: {}, transactions: [], dashboard: {}, dispatches: []
+            },
+            currentPage: 'dashboard',
+            dateFilter: { period: 'all', startDate: null, endDate: null },
+            revenueChart: null,
+            dispatchesChart: null,
+        },
+
+        async init() {
+            this.state.token = localStorage.getItem('tracker_token');
+            if (this.state.token) {
+                try {
+                    const [staticData, transactions, dispatches] = await Promise.all([
+                        this.apiRequest('/api/dashboard/data'),
+                        this.apiRequest('/api/transactions'),
+                        this.apiRequest('/api/dispatches')
+                    ]);
+                    this.state.data = { ...this.state.data, ...staticData, transactions: transactions || [], dispatches: dispatches || [] };
+                    this.renderLayout();
+                    this.navigateTo('dashboard');
+                } catch (e) {
+                    this.logout();
+                }
+            } else {
+                this.renderLogin();
+                this.addAuthEventListeners();
+            }
+        },
+
+        renderLogin(page = 'login') {
+            document.getElementById('app').innerHTML = this.templates.auth(page);
+        },
+
+        renderLayout() {
+            document.getElementById('app').innerHTML = this.templates.layout();
+            this.addDashboardEventListeners();
+        },
+
+        templates: {
+            auth(page = 'login') {
+                return `<div class="flex items-center justify-center min-h-screen p-4">${page === 'login' ? this.loginForm() : this.registerForm()}</div>`;
+            },
+            loginForm() {
+                return `
+                <div class="card p-8 rounded-2xl shadow-lg w-full max-w-md animate-fade-in">
+                    <div class="text-center mb-8">
+                        <div class="flex items-center justify-center gap-3">
+                            <span class="text-4xl">🎯</span>
+                            <h1 class="text-4xl font-bold text-white">Tracker</h1>
+                        </div>
+                        <p class="text-gray-400 mt-2">Acesse sua conta para continuar.</p>
+                    </div>
+                    <form id="loginForm" class="space-y-6">
+                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">E-mail</label><input name="email" type="email" required class="form-input w-full p-3"></div>
+                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">Senha</label><input name="password" type="password" required class="form-input w-full p-3"></div>
+                        <button type="submit" class="btn w-full font-semibold py-3 rounded-md">Entrar na Plataforma</button>
+                    </form>
+                    <div class="text-center mt-6"><a href="#" id="showRegister" class="text-sm text-indigo-400 hover:text-indigo-300 hover:underline">Não tem uma conta? Cadastre-se agora</a></div>
+                </div>`;
+            },
+            registerForm() {
+                return `
+                <div class="card p-8 rounded-2xl shadow-lg w-full max-w-md animate-fade-in">
+                     <div class="text-center mb-8">
+                        <div class="flex items-center justify-center gap-3">
+                           <span class="text-4xl">🎯</span>
+                            <h1 class="text-4xl font-bold text-white">Tracker</h1>
+                        </div>
+                        <p class="text-gray-400 mt-2">Crie sua conta e comece a rastrear.</p>
+                    </div>
+                    <form id="registerForm" class="space-y-6">
+                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">Nome</label><input name="name" type="text" required class="form-input w-full p-3"></div>
+                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">E-mail</label><input name="email" type="email" required class="form-input w-full p-3"></div>
+                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">Senha (mínimo 8 caracteres)</label><input name="password" type="password" required minlength="8" class="form-input w-full p-3"></div>
+                        <button type="submit" class="btn w-full font-semibold py-3 rounded-md">Criar Minha Conta</button>
+                    </form>
+                    <div class="text-center mt-6"><a href="#" id="showLogin" class="text-sm text-indigo-400 hover:text-indigo-300 hover:underline">Já tem uma conta? Faça Login</a></div>
+                </div>`;
+            },
+            layout() {
+                return `
+                <div class="relative min-h-screen md:flex">
+                    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-20 md:hidden hidden"></div>
+                    <aside id="sidebar" class="w-64 bg-gray-900/80 backdrop-blur-lg p-4 flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30 border-r border-gray-800 flex">
+                        <div class="text-center py-4 mb-6 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-3xl">🎯</span>
+                                <h1 class="text-2xl font-bold text-white">Tracker<span class="text-xs text-red-500 font-semibold ml-2 align-super">BETA</span></h1>
+                            </div>
+                            <button id="close-sidebar-btn" class="md:hidden text-gray-400 text-3xl hover:text-white">&times;</button>
+                        </div>
+                        <nav id="sidebarNav" class="flex-grow flex flex-col space-y-1">
+                            <div data-target="dashboard" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>Dashboard</div>
+                            <div data-target="bots" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V5a1 1 0 00-1.447-.894l-4 2A1 1 0 0011 7v10zM4 17a1 1 0 001.447.894l4-2A1 1 0 0010 15V5a1 1 0 00-1.447-.894l-4 2A1 1 0 004 7v10z" /></svg>Gerenciar Bots</div>
+                            <div class="nav-link cursor-not-allowed opacity-60"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>Disparos<span class="text-xs text-red-500 font-semibold ml-2">(EM BREVE)</span></div>
+                            <div data-target="checkouts" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>Criador de Checkout</div>
+                            <div data-target="pressels" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>Criador de Pressel</div>
+                            <div data-target="pixels" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h10a3 3 0 013 3v5a.997.997 0 01-.293-.707zM5 4a1 1 0 00-1 1v.01L8 9.01l4-4.002V5a1 1 0 00-1-1H5z" clip-rule="evenodd" /></svg>Gerenciar Pixels</div>
+                            <div data-target="transactions" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8.433 7.418c.158-.103.346-.196.567-.267v1.698a2.5 2.5 0 00-1.168-.217c-.165 0-.33.018-.488.054a1 1 0 01-.502 1.765l.986.328c.73.243 1.196.96 1.196 1.765 0 1.132-.98 1.99-2.206 1.99-1.225 0-2.205-.858-2.205-1.99 0-.962.63-1.698 1.447-1.938l.986-.329a1 1 0 01.502-1.765z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.5 4.5 0 00-1.838.385l-.234-.14a1 1 0 00-1.18.157l-1 1.732a1 1 0 00.157 1.18l.234.14A4.5 4.5 0 005.5 8.5v.092l-1.07.356a1 1 0 00-.503 1.765l.986.329a2.5 2.5 0 001.09.243v.092a4.5 4.5 0 001.838-.385l.234.14a1 1 0 001.18-.157l1-1.732a1 1 0 00-.157-1.18l-.234-.14a4.5 4.5 0 001.03-2.062V5z" clip-rule="evenodd" /></svg>Transações</div>
+                        <div class="h-px bg-gray-700 my-2"></div>
+                        <div data-target="settings" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" /></svg>API & Gateways</div>
+                        <div data-target="integrations" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0l-1.5-1.5a2 2 0 112.828-2.828l1.5 1.5z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M6.414 11.586a2 2 0 10-2.828 2.828l3 3a2 2 0 002.828 0l1.5-1.5a2 2 0 10-2.828-2.828l-1.5 1.5z" clip-rule="evenodd" /></svg>Integrações</div>
+                        <div data-target="documentation" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>Credenciais</div>
+                    </nav>
+                    <div class="mt-auto"><button id="logoutButton" class="w-full text-gray-400 hover:bg-red-900/50 hover:text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" /></svg>Sair da Conta</button></div>
+                </aside>
+                <div class="flex-1 flex flex-col w-full">
+                    <header class="p-4 md:hidden card flex justify-between items-center sticky top-0 z-10">
+                         <button id="open-sidebar-btn" class="text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                         </button>
+                         <div class="text-lg font-bold">Tracker</div>
+                    </header>
+                    <main id="content" class="flex-1 p-4 md:p-8 overflow-y-auto"></main>
+                </div>
+            </div>`;
+        },
+        dateFilterComponent(page) {
+            const { period } = this.state.dateFilter;
+            const btnClasses = "btn-secondary py-1 px-3 rounded-md text-xs";
+            const activeClasses = "active !bg-indigo-500 !border-indigo-400 !text-white";
+            return `
+            <div id="${page}-date-filter" class="card p-3 rounded-lg mb-6 flex flex-wrap items-center gap-2 text-sm">
+                <span class="font-semibold mr-2 text-gray-300">Período:</span>
+                <button data-period="today" class="${btnClasses} ${period === 'today' ? activeClasses : ''}">Hoje</button>
+                <button data-period="yesterday" class="${btnClasses} ${period === 'yesterday' ? activeClasses : ''}">Ontem</button>
+                <button data-period="last7days" class="${btnClasses} ${period === 'last7days' ? activeClasses : ''}">7 Dias</button>
+                <button data-period="thisMonth" class="${btnClasses} ${period === 'thisMonth' ? activeClasses : ''}">Este Mês</button>
+                <div class="flex items-center gap-2 pl-4 border-l border-gray-700 ml-2">
+                     <input type="date" id="${page}-start-date" class="form-date p-1 rounded-md text-xs">
+                     <span class="text-gray-500">até</span>
+                     <input type="date" id="${page}-end-date" class="form-date p-1 rounded-md text-xs">
+                     <button id="apply-custom-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md text-xs">Filtrar</button>
+                </div>
+                <button id="clear-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md ml-auto text-xs">Limpar Filtro</button>
+            </div>`;
+        },
+        dashboard() {
+            return `
+            <div class="animate-fade-in">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold text-white">Painel de Métricas</h1>
+                    <p class="text-gray-400">Visão geral do desempenho de suas operações.</p>
+                </div>
+                ${this.dateFilterComponent('dashboard')}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                    <div class="card metric-card"><h3 class="text-sm text-gray-400">Cliques na Página</h3><p id="metric-clicks" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
+                    <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Gerados</h3><p id="metric-generated" class="text-4xl font-bold text-yellow-400 mt-2">...</p></div>
+                    <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Total</h3><p id="metric-total-revenue" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
+                    <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Pagos</h3><p id="metric-paid" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
+                    <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Pago</h3><p id="metric-paid-revenue" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
+                </div>
+                <div class="card p-6 rounded-lg mb-8">
+                    <h2 class="text-xl font-semibold text-white mb-4">Desempenho de Faturamento</h2>
+                    <canvas id="revenueChart" height="100"></canvas>
+                </div>
+                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                    <div class="card p-6 rounded-lg lg:col-span-2"><h2 class="text-xl font-semibold text-white mb-4">Desempenho por Bot</h2><div id="bots-performance-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Bot</th><th>Cliques</th><th>Vendas</th><th>Faturamento</th></tr></thead><tbody id="bots-performance-table"><tr><td colspan="4" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
+                    <div class="card p-6 rounded-lg"><h2 class="text-xl font-semibold text-white mb-4">Tráfego por Estado</h2><div id="traffic-by-state-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Estado</th><th>Cliques</th></tr></thead><tbody id="traffic-by-state-table"><tr><td colspan="2" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
+                </div>
+                 <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 mt-8">
+                    <div class="card p-6 rounded-lg lg:col-span-2">
+                         <h2 class="text-xl font-semibold text-white mb-4">Minhas Conquistas</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="achievements-list">
+                            <p class="text-gray-500 text-sm">Carregando conquistas...</p>
+                        </div>
+                    </div>
+                     <div class="card p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold text-white mb-4">Ranking de Vendas</h2>
+                        <div id="ranking-list" class="space-y-2">
+                            <p class="text-gray-500 text-sm">Carregando ranking...</p>
+                        </div>
+                        <p id="user-rank-status" class="mt-4 text-center text-sm font-medium text-indigo-400"></p>
+                    </div>
+                </div>
+            </div>`;
+        },
+        pixels() {
+            const pixelListHTML = this.state.data.pixels.map(p => `<div class="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center"><span class="font-mono text-sm">${p.account_name}</span><button data-id="${p.id}" class="delete-pixel-btn btn btn-red text-xs py-1 px-2">Excluir</button></div>`).join('');
+            return `
+            <div class="animate-fade-in">
+                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Gerenciar Pixels</h1><p class="text-gray-400">Adicione e gerencie seus pixels do Facebook.</p></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4 text-white">Adicionar Novo Pixel</h2>
+                        <form id="pixelForm" class="space-y-4"><input name="account_name" placeholder="Nome do Pixel (Ex: Produto Y)" class="form-input w-full p-2" required><input name="pixel_id" placeholder="ID do Pixel da Meta" class="form-input w-full p-2" required><textarea name="meta_api_token" placeholder="Token da API de Conversões" class="form-input w-full p-2" rows="3" required></textarea><button type="submit" class="btn w-full p-2 rounded-md">Adicionar Pixel</button></form>
+                    </div>
+                    <div class="card p-6 rounded-lg"><h2 class="text-xl font-semibold text-white mb-4">Pixels Salvos</h2><div id="pixel-list" class="space-y-3 max-h-96 overflow-y-auto">${pixelListHTML.length ? pixelListHTML : '<p class="text-gray-500 text-sm">Nenhum pixel salvo.</p>'}</div></div>
+                </div>
+            </div>`;
+        },
+        bots() {
+             const botListHTML = this.state.data.bots.map(b => `
+                <div class="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center">
+                    <div>
+                        <span class="text-sm font-medium">${b.bot_name}</span>
+                        <span id="status-indicator-bot-${b.id}"></span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button data-id="${b.id}" class="test-bot-btn btn-secondary text-xs py-1 px-2">Testar</button>
+                        <button data-id="${b.id}" class="delete-bot-btn btn btn-red text-xs py-1 px-2">Excluir</button>
+                    </div>
+                </div>`).join('');
+            return `
+            <div class="animate-fade-in">
+                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Gerenciar Bots</h1><p class="text-gray-400">Conecte seus bots do Telegram para automatizar processos.</p></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4 text-white">Adicionar Novo Bot</h2>
+                        <form id="botForm" class="space-y-4"><input name="bot_name" placeholder="Username do Bot (sem @)" class="form-input w-full p-2" required><input name="bot_token" placeholder="Token do Bot (do BotFather)" class="form-input w-full p-2" required><button type="submit" class="btn w-full p-2 rounded-md">Adicionar Bot</button></form>
+                    </div>
+                    <div class="card p-6 rounded-lg"><h2 class="text-xl font-semibold text-white mb-4">Bots Salvos</h2><div id="bot-list" class="space-y-3 max-h-96 overflow-y-auto">${botListHTML.length ? botListHTML : '<p class="text-gray-500 text-sm">Nenhum bot salvo.</p>'}</div></div>
+                </div>
+            </div>`;
+        },
+        dispatches() {
+            const { dispatches } = this.state.data;
+            const totalSuccess = dispatches.reduce((acc, d) => acc + (d.success_count || 0), 0);
+            const totalFailure = dispatches.reduce((acc, d) => acc + (d.failure_count || 0), 0);
+            const totalSent = totalSuccess + totalFailure;
+            const averageSuccessRate = totalSent > 0 ? (totalSuccess / totalSent) * 100 : 0;
+            let bestCampaign = { rate: -1, content: 'N/A' };
+            if(dispatches.length > 0) {
+                bestCampaign = dispatches.reduce((best, current) => {
+                    const total = (current.success_count || 0) + (current.failure_count || 0);
+                    const rate = total > 0 ? ((current.success_count || 0) / total) * 100 : 0;
+                    if (rate > best.rate) {
+                        return { rate: rate, content: current.message_content };
+                    }
+                    return best;
+                }, { rate: -1, content: 'N/A' });
+            }
+            const engagementLevels = { 1: 100, 2: 500, 3: 1000, 4: 5000, 5: 10000 };
+            let currentLevel = 0;
+            let nextLevelSends = engagementLevels[1];
+            for (const level in engagementLevels) {
+                if (totalSent >= engagementLevels[level]) {
+                    currentLevel = parseInt(level);
+                } else {
+                    nextLevelSends = engagementLevels[level];
+                    break;
+                }
+            }
+            if (currentLevel === 5) nextLevelSends = totalSent;
+            const progressToNextLevel = totalSent === 0 && nextLevelSends === 0 ? 0 : (totalSent / nextLevelSends) * 100;
+            const dispatchListHTML = dispatches.sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at)).map(d => {
+                const total = (d.success_count || 0) + (d.failure_count || 0);
+                const successRate = total > 0 ? ((d.success_count || 0) / total) * 100 : 0;
+                let performanceIcon = '';
+                if (successRate > 95) performanceIcon = '🥇';
+                else if (successRate > 85) performanceIcon = '🥈';
+                else if (successRate > 70) performanceIcon = '🥉';
+                return `
+                <tr class="hover:bg-gray-800/50">
+                    <td>${new Date(d.sent_at).toLocaleString('pt-BR')}</td>
+                    <td class="flex items-center gap-2"><p class="truncate max-w-xs">${d.message_content}</p></td>
+                    <td>${total}</td>
+                    <td class="font-medium ${successRate >= 80 ? 'text-green-400' : 'text-yellow-400'}">${successRate.toFixed(1)}% ${performanceIcon}</td>
+                    <td><button data-log-id="${d.id}" class="view-dispatch-details-btn btn-secondary text-xs py-1 px-2">Ver Relatório</button></td>
+                </tr>
+            `}).join('');
+            return `
+            <div class="animate-fade-in">
+                <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                    <div><h1 class="text-3xl font-bold text-white">Central de Campanhas</h1><p class="text-gray-400">Envie, analise e otimize seus disparos em massa.</p></div>
+                    <button id="show-dispatch-modal-btn" class="btn">🚀 Criar Novo Disparo</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="card p-6 rounded-lg flex flex-col justify-between">
+                            <h3 class="text-sm font-medium text-gray-400">Estatísticas Gerais</h3>
+                            <div class="mt-2">
+                                <p class="text-4xl font-bold text-white">${totalSent}</p>
+                                <p class="text-gray-400">Envios totais</p>
+                            </div>
+                            <div class="mt-4">
+                                 <p class="text-2xl font-bold text-indigo-400">${averageSuccessRate.toFixed(1)}%</p>
+                                 <p class="text-gray-400">Taxa de sucesso média</p>
+                            </div>
+                        </div>
+                        <div class="card p-6 rounded-lg flex flex-col justify-between">
+                            <h3 class="text-sm font-medium text-gray-400">Melhor Campanha</h3>
+                            <p class="text-lg font-semibold text-white mt-2 truncate" title="${bestCampaign.content}">${bestCampaign.content}</p>
+                            <p class="text-4xl font-bold text-green-400 mt-2">${bestCampaign.rate > -1 ? bestCampaign.rate.toFixed(1) + '%' : 'N/A'}</p>
+                            <p class="text-gray-400">de taxa de sucesso</p>
+                        </div>
+                         <div class="card p-6 rounded-lg sm:col-span-2">
+                            <h3 class="text-sm font-medium text-gray-400">Nível de Engajamento</h3>
+                            <div class="flex items-center justify-between mt-2">
+                                <span class="font-bold text-lg text-yellow-400">Nível ${currentLevel}</span>
+                                <span class="text-xs text-gray-400">${totalSent} / ${nextLevelSends} envios</span>
+                            </div>
+                            <div class="progress-bar mt-2 w-full"><div class="progress-bar-inner bg-yellow-400" style="width: ${progressToNextLevel}%;"></div></div>
+                        </div>
+                    </div>
+                    <div class="card p-6 rounded-lg">
+                         <h2 class="text-xl font-semibold text-white mb-4">Sucesso vs. Falha</h2>
+                         <canvas id="dispatchesChart" height="250"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold text-white mb-4">Histórico de Campanhas</h2>
+                    <div class="overflow-x-auto">
+                        <table class="table-custom w-full text-sm">
+                            <thead><tr><th>Data</th><th>Mensagem</th><th>Envios</th><th>Sucesso</th><th>Ações</th></tr></thead>
+                            <tbody id="dispatches-table-body">
+                                ${dispatchListHTML.length ? dispatchListHTML : '<tr><td colspan="5" class="text-center text-gray-500 py-8">Nenhum disparo realizado ainda.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+        },
+        pressels() {
+            const { pixels, bots, pressels } = this.state.data;
+            const botOptions = bots.map(b => `<option value="${b.id}">${b.bot_name}</option>`).join('');
+            const pixelCheckboxes = pixels.map(p => `<label class="flex items-center space-x-2 text-gray-300 hover:text-white cursor-pointer p-2 rounded-md hover:bg-gray-700/50"><input type="checkbox" name="pixel_ids" value="${p.id}" class="h-4 w-4 bg-gray-700 border-gray-500 rounded text-indigo-500 focus:ring-indigo-500"><span>${p.account_name}</span></label>`).join('');
+            const presselList = pressels.map(pr => `<div class="p-3 card flex justify-between items-center text-sm"><div><p class="font-semibold">${pr.name}</p><p class="text-xs text-gray-400">Bot: ${pr.bot_name}</p></div><div class="space-x-2"><button data-id="${pr.id}" class="generate-pressel-code-btn btn text-xs py-1 px-2">Ver Código</button><button data-id="${pr.id}" class="delete-pressel-btn btn btn-red text-xs py-1 px-2">Excluir</button></div></div>`).join('');
+            return `
+            <div class="animate-fade-in">
+                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Criador de Pressel</h1><p class="text-gray-400">Configure suas páginas de pressel para captura de leads.</p></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card p-6 rounded-lg">
+                        <h2 class="text-xl font-bold mb-4 text-white">Criar Nova Pressel</h2>
+                        <form id="presselForm" class="space-y-4"><input name="name" placeholder="Nome da Pressel (Ex: Campanha Black Friday)" class="form-input w-full p-2" required><input name="white_page_url" type="url" placeholder="URL da Página Branca (Opcional)" class="form-input w-full p-2"><select name="bot_id" class="form-select w-full p-2" required><option value="">Selecione um Bot</option>${botOptions}</select><div class="card p-3"><p class="font-semibold mb-2">Selecione os Pixels:</p><div class="space-y-1">${pixelCheckboxes.length ? pixelCheckboxes : '<p class="text-gray-500 text-sm">Cadastre um pixel primeiro.</p>'}</div></div><button type="submit" class="btn w-full p-3 rounded-md text-base font-bold">Salvar e Gerar Código</button></form>
+                    </div>
+                    <div class="card p-6 rounded-lg"><h2 class="text-xl font-bold mb-4 text-white">Pressels Criadas</h2><div id="pressel-list" class="space-y-3">${presselList.length ? presselList : '<p class="text-gray-500 text-sm">Nenhuma pressel criada.</p>'}</div></div>
+                </div>
+            </div>`;
+        },
+        checkouts() {
+            const { pixels, checkouts } = this.state.data;
+            const pixelCheckboxes = pixels.map(p => `<label class="flex items-center space-x-2 text-gray-300 hover:text-white cursor-pointer p-2 rounded-md hover:bg-gray-700/50"><input type="checkbox" name="pixel_ids" value="${p.id}" class="h-4 w-4 bg-gray-700 border-gray-500 rounded text-indigo-500 focus:ring-indigo-500"><span>${p.account_name}</span></label>`).join('');
+            const checkoutList = checkouts.map(c => `
+                <div class="p-3 card flex justify-between items-center text-sm">
+                    <div><p class="font-semibold">${c.name}</p><p class="text-xs text-gray-400">Produto: ${c.product_name}</p></div>
+                    <div class="space-x-2"><button data-id="${c.id}" class="generate-checkout-code-btn btn text-xs py-1 px-2">Ver Código</button><button data-id="${c.id}" class="delete-checkout-btn btn btn-red text-xs py-1 px-2">Excluir</button></div>
+                </div>`).join('');
+            return `
+            <div class="animate-fade-in">
+                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Criador de Checkout</h1><p class="text-gray-400">Crie e configure páginas de pagamento personalizadas.</p></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card p-6 rounded-lg">
+                        <h2 class="text-xl font-bold mb-4 text-white">Criar Novo Checkout</h2>
+                        <form id="checkoutForm" class="space-y-4">
+                            <input name="name" placeholder="Nome Interno do Checkout (Ex: Ebook XYZ)" class="form-input w-full p-2" required>
+                            <input name="product_name" placeholder="Nome do Produto (visível ao cliente)" class="form-input w-full p-2" required>
+                            <input name="redirect_url" type="url" placeholder="URL de Redirecionamento Pós-Compra" class="form-input w-full p-2" required>
+                            <select name="value_type" id="value-type-selector" class="form-select w-full p-2" required><option value="fixed">Valor Fixo</option><option value="variable">Valor Variável (definido na URL)</option></select>
+                            <div id="fixed-value-container"><input name="fixed_value_cents" type="number" placeholder="Valor em CENTAVOS (Ex: 1990 para R$19,90)" class="form-input w-full p-2"></div>
+                            <div class="card p-3"><p class="font-semibold mb-2">Selecione os Pixels:</p><div class="space-y-1">${pixelCheckboxes.length ? pixelCheckboxes : '<p class="text-gray-500 text-sm">Cadastre um pixel primeiro.</p>'}</div></div>
+                            <button type="submit" class="btn w-full p-3 rounded-md text-base font-bold">Salvar e Gerar Código</button>
+                        </form>
+                    </div>
+                    <div class="card p-6 rounded-lg"><h2 class="text-xl font-bold mb-4 text-white">Checkouts Criados</h2><div id="checkout-list" class="space-y-3">${checkoutList.length ? checkoutList : '<p class="text-gray-500 text-sm">Nenhum checkout criado.</p>'}</div></div>
+                </div>
+            </div>`;
+        },
+        transactions() {
+            return `
+            <div class="animate-fade-in">
+                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Histórico de Transações</h1><p class="text-gray-400">Visualize todas as transações de PIX geradas e pagas.</p></div>
+                ${this.dateFilterComponent('transactions')}
+                <div class="card p-6 rounded-lg"><div id="transactions-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Status</th><th>Valor</th><th>Origem</th><th>Provedor PIX</th><th>Data</th></tr></thead><tbody id="transactions-table-body"><tr><td colspan="5" class="text-center text-gray-500 py-8">Carregando transações...</td></tr></tbody></table></div></div>
+            </div>`;
+        },
+        settings() {
+            const { settings } = this.state.data;
+            const providers = [
+                { value: 'pushinpay', text: 'PushinPay (PIX)' },
+                { value: 'stripe', text: 'Stripe (Cartão)' },
+                { value: 'cnpay', text: 'CN Pay (PIX)' },
+                { value: 'oasyfy', text: 'Oasy.fy (PIX)' },
+                { value: 'syncpay', text: 'SyncPay (PIX)' }
+            ];
+            const createSelect = (name, selectedValue) => {
+                const options = providers.map(p => `<option value="${p.value}" ${p.value === selectedValue ? 'selected' : ''}>${p.text}</option>`).join('');
+                return `<select name="${name}" class="form-select w-full p-2">${options}<option value="" ${!selectedValue ? 'selected' : ''}>Nenhum</option></select>`;
+            };
+            return `
+            <div class="animate-fade-in">
+                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Configurações de API & Gateways</h1><p class="text-gray-400">Configure seus provedores de pagamento e a ordem de prioridade.</p></div>
+                <form id="pixSettingsForm" class="max-w-4xl">
+                    <div class="flex border-b border-gray-700 mb-6" id="pix-settings-tabs">
+                        <button type="button" data-tab="priority" class="tab-button active">Ordem de Prioridade</button>
+                        <button type="button" data-tab="credentials" class="tab-button ml-2">Credenciais dos Gateways</button>
+                    </div>
+                    <div id="tab-priority" class="tab-content active space-y-8">
+                        <div class="card p-6 rounded-lg">
+                            <h2 class="text-xl font-semibold mb-2 text-white">Ordem de Prioridade (Fallback)</h2>
+                            <p class="text-sm text-gray-400 mb-4">Defina a ordem em que o sistema tentará gerar a cobrança. Se o Provedor Primário falhar, o sistema automaticamente tentará o próximo na lista.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div><label class="block mb-2 text-sm font-medium text-gray-400">1º - Provedor Primário</label>${createSelect('pix_provider_primary', settings.pix_provider_primary)}</div>
+                                <div><label class="block mb-2 text-sm font-medium text-gray-400">2º - Provedor Secundário</label>${createSelect('pix_provider_secondary', settings.pix_provider_secondary)}</div>
+                                <div><label class="block mb-2 text-sm font-medium text-gray-400">3º - Provedor Terciário</label>${createSelect('pix_provider_tertiary', settings.pix_provider_tertiary)}</div>
+                            </div>
+                            <div class="mt-6 pt-6 border-t border-gray-700"><button type="button" id="testPriorityRouteBtn" class="btn btn-green w-full md:w-auto">Testar Rota de Prioridade</button></div>
+                        </div>
+                    </div>
+                    <div id="tab-credentials" class="tab-content space-y-6">
+                        <div class="card p-6 rounded-lg">
+                            <div class="flex justify-between items-start mb-4">
+                                <div><h3 class="text-lg font-medium text-indigo-400 inline-block">Stripe (Cartão de Crédito)</h3><span id="status-indicator-stripe"></span></div>
+                                <button type="button" data-provider="stripe" class="test-pix-btn btn btn-secondary text-xs py-1 px-3">Testar Conexão</button>
+                            </div>
+                            <label class="block mb-2 text-sm text-gray-400">Chave Publicável (Publicable Key)</label><input name="stripe_public_key" type="password" value="${settings.stripe_public_key || ''}" class="form-input w-full p-2">
+                            <label class="block mt-4 mb-2 text-sm text-gray-400">Chave Secreta (Secret Key)</label><input name="stripe_secret_key" type="password" value="${settings.stripe_secret_key || ''}" class="form-input w-full p-2">
+                        </div>
+                        <div class="card p-6 rounded-lg">
+                            <div class="flex justify-between items-start mb-4">
+                                <div><h3 class="text-lg font-medium text-indigo-400 inline-block">PushinPay (PIX)</h3><span id="status-indicator-pushinpay"></span></div>
+                                <button type="button" data-provider="pushinpay" class="test-pix-btn btn btn-secondary text-xs py-1 px-3">Testar Conexão</button>
+                            </div>
+                            <label class="block mb-2 text-sm text-gray-400">Bearer Token</label><input name="pushinpay_token" type="password" value="${settings.pushinpay_token || ''}" class="form-input w-full p-2">
+                        </div>
+                        <div class="card p-6 rounded-lg">
+                            <div class="flex justify-between items-start mb-4">
+                                <div><h3 class="text-lg font-medium text-indigo-400 inline-block">SyncPay (PIX)</h3><span id="status-indicator-syncpay"></span></div>
+                                <button type="button" data-provider="syncpay" class="test-pix-btn btn btn-secondary text-xs py-1 px-3">Testar Conexão</button>
+                            </div>
+                            <label class="block mb-2 text-sm text-gray-400">Client ID</label><input name="syncpay_client_id" type="password" value="${settings.syncpay_client_id || ''}" class="form-input w-full p-2">
+                            <label class="block mt-4 mb-2 text-sm text-gray-400">Client Secret</label><input name="syncpay_client_secret" type="password" value="${settings.syncpay_client_secret || ''}" class="form-input w-full p-2">
+                        </div>
+                        <div class="card p-6 rounded-lg">
+                            <div class="flex justify-between items-start mb-4">
+                                <div><h3 class="text-lg font-medium text-indigo-400 inline-block">CN Pay (PIX)</h3><span id="status-indicator-cnpay"></span></div>
+                                <button type="button" data-provider="cnpay" class="test-pix-btn btn btn-secondary text-xs py-1 px-3">Testar Conexão</button>
+                            </div>
+                            <label class="block mb-2 text-sm text-gray-400">Chave Pública</label><input name="cnpay_public_key" type="password" value="${settings.cnpay_public_key || ''}" class="form-input w-full p-2">
+                            <label class="block mt-4 mb-2 text-sm text-gray-400">Chave Privada</label><input name="cnpay_secret_key" type="password" value="${settings.cnpay_secret_key || ''}" class="form-input w-full p-2">
+                        </div>
+                        <div class="card p-6 rounded-lg">
+                             <div class="flex justify-between items-start mb-4">
+                                <div><h3 class="text-lg font-medium text-indigo-400 inline-block">Oasy.fy (PIX)</h3><span id="status-indicator-oasyfy"></span></div>
+                                <button type="button" data-provider="oasyfy" class="test-pix-btn btn btn-secondary text-xs py-1 px-3">Testar Conexão</button>
+                            </div>
+                            <label class="block mb-2 text-sm text-gray-400">Chave Pública</label><input name="oasyfy_public_key" type="password" value="${settings.oasyfy_public_key || ''}" class="form-input w-full p-2">
+                            <label class="block mt-4 mb-2 text-sm text-gray-400">Chave Privada</label><input name="oasyfy_secret_key" type="password" value="${settings.oasyfy_secret_key || ''}" class="form-input w-full p-2">
+                        </div>
+                    </div>
+                    <div class="mt-8"><button type="submit" class="btn w-full p-3 font-bold rounded-md">Salvar Configurações</button></div>
+                </form>
+            </div>`;
+        },
+        integrations() {
+            const { settings } = this.state.data;
+            return `
+            <div class="animate-fade-in">
+                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Integrações</h1><p class="text-gray-400">Conecte o Tracker a outras ferramentas.</p></div>
+                <div class="max-w-2xl">
+                    <form id="utmifySettingsForm" class="space-y-8">
+                         <div class="card p-6 rounded-lg">
+                            <h2 class="text-xl font-semibold text-white">Utmify</h2>
+                            <p class="text-sm text-gray-400 mt-1 mb-4">Integre com a Utmify para espelhar suas vendas e analisar a performance por UTMs.</p>
+                            <label class="block mb-2 text-sm text-gray-400">Token da API Utmify (x-api-token)</label>
+                            <input name="utmify_api_token" type="password" value="${settings.utmify_api_token || ''}" class="form-input w-full p-2">
+                        </div>
+                        <div><button type="submit" class="btn w-full p-3 font-bold rounded-md">Salvar Integrações</button></div>
+                    </form>
+                </div>
+            </div>`;
+        },
+        documentation() {
+            return `
+            <div class="animate-fade-in">
+                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Credenciais da API</h1><p class="text-gray-400">Sua chave de API para integrações externas.</p></div>
+                <div class="grid grid-cols-1 gap-8 max-w-2xl">
+                    <div class="card p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4 text-white">Sua Chave de API Tracker</h2>
+                        <p class="text-sm text-gray-400 mb-4">Use esta chave para autenticar suas requisições na API Tracker (ex: gerar PIX, consultar status).</p>
+                        <div class="flex items-center gap-2">
+                            <input id="tracker-api-key" type="password" readonly value="${this.state.data.settings.apiKey || ''}" class="form-input flex-grow p-2">
+                            <button type="button" class="toggle-visibility-btn p-2 text-gray-400 hover:text-white" data-target="#tracker-api-key"><svg class="pointer-events-none h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg></button>
+                            <button type="button" class="copy-btn btn text-sm py-2 px-3" data-target="#tracker-api-key">Copiar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        },
+        modal(title, content) {
+            return `<div id="modal" class="modal active"><div class="card p-6 rounded-lg w-full max-w-4xl animate-fade-in"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-white">${title}</h2><button id="closeModalBtn" class="text-gray-400 hover:text-white text-3xl">&times;</button></div>${content}</div></div>`;
+        }
+    },
+
+    addAuthEventListeners() {
+        const container = document.getElementById('app');
+        container.addEventListener('click', (e) => {
+            if (e.target.id === 'showRegister') { e.preventDefault(); this.renderLogin('register'); }
+            if (e.target.id === 'showLogin') { e.preventDefault(); this.renderLogin('login'); }
+        });
+        container.addEventListener('submit', async (e) => {
+            const form = e.target;
+            if (form.id === 'loginForm' || form.id === 'registerForm') {
+                e.preventDefault();
+                const data = Object.fromEntries(new FormData(form).entries());
+                const button = form.querySelector('button[type="submit"]');
+                const originalButtonText = button.innerHTML;
+                button.innerHTML = 'Processando...';
+                button.disabled = true;
+                if (form.id === 'loginForm') {
+                    await this.login(data.email, data.password);
+                } else if (form.id === 'registerForm') {
+                    await this.register(data.name, data.email, data.password);
+                }
+                button.innerHTML = originalButtonText;
+                button.disabled = false;
+            }
+        });
+    },
+
+    addDashboardEventListeners() {
+        document.addEventListener('click', async (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar && overlay) {
+                const isOpenBtn = e.target.closest('#open-sidebar-btn');
+                const isCloseBtn = e.target.closest('#close-sidebar-btn');
+                const isOverlay = e.target.id === 'sidebar-overlay';
+                const isNavLink = e.target.closest('.nav-link');
+                if (isOpenBtn) {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                } else if (isCloseBtn || isOverlay || (isNavLink && window.innerWidth < 768)) {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                }
+            }
+            if (e.target.closest('#logoutButton')) this.logout();
+            if (e.target.closest('#closeModalBtn')) document.getElementById('modal-container').innerHTML = '';
+
+            const sidebarLink = e.target.closest('.nav-link');
+            if (sidebarLink && sidebarLink.dataset.target) this.navigateTo(sidebarLink.dataset.target);
+
+            const copyBtn = e.target.closest('.copy-btn');
+            if (copyBtn) {
+                const targetInput = document.querySelector(copyBtn.dataset.target);
+                if(targetInput) {
+                    navigator.clipboard.writeText(targetInput.value || targetInput.textContent).then(() => {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = 'Copiado!';
+                        setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+                    });
+                }
+            }
+
+            const toggleBtn = e.target.closest('.toggle-visibility-btn');
+            if (toggleBtn) {
+                const targetInput = document.querySelector(toggleBtn.dataset.target);
+                const isPassword = targetInput.type === 'password';
+                targetInput.type = isPassword ? 'text' : 'password';
+                toggleBtn.innerHTML = isPassword
+                     ? `<svg class="pointer-events-none h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781z" clip-rule="evenodd" /><path d="M12.454 16.697L9.75 13.992a2.5 2.5 0 01-3.482-3.482l-2.455-2.455a10.048 10.048 0 00-3.263 5.218C1.732 14.057 5.522 17 10 17a9.95 9.95 0 005.023-1.303l-2.57-2.57z" /></svg>`
+                     : `<svg class="pointer-events-none h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>`;
+            }
+
+            const presselBtn = e.target.closest('.generate-pressel-code-btn');
+            if (presselBtn) {
+                const presselId = presselBtn.dataset.id;
+                const pressel = this.state.data.pressels.find(p => p.id == presselId);
+                if (pressel) this.generatePresselCode(pressel);
+            }
+            
+            const checkoutBtn = e.target.closest('.generate-checkout-code-btn');
+            if (checkoutBtn) {
+                const checkoutId = checkoutBtn.dataset.id;
+                this.generateCheckoutHTML(checkoutId);
+            }
+
+            const botBtn = e.target.closest('.test-bot-btn');
+            if (botBtn) {
+                const botId = botBtn.dataset.id;
+                this.testBotConnection(botId, botBtn);
+            }
+
+            const dispatchModalBtn = e.target.closest('#show-dispatch-modal-btn');
+            if(dispatchModalBtn) this.showDispatchModal();
+
+            const massMessageBtn = e.target.closest('#send-mass-message-btn');
+            if (massMessageBtn) {
+                e.preventDefault();
+                if (confirm(`Tem certeza que deseja iniciar este disparo?`)) {
+                    this.sendMassMessage(massMessageBtn);
+                }
+            }
+            
+            const dispatchDetailsBtn = e.target.closest('.view-dispatch-details-btn');
+            if (dispatchDetailsBtn) {
+                const logId = dispatchDetailsBtn.dataset.logId;
+                this.viewDispatchDetails(logId);
+            }
+            
+            const testPixBtn = e.target.closest('.test-pix-btn');
+            if (testPixBtn) {
+                const provider = testPixBtn.dataset.provider;
+                this.testIndividualPixConnection(provider, testPixBtn);
+            }
+
+            const testPriorityBtn = e.target.closest('#testPriorityRouteBtn');
+            if (testPriorityBtn) this.testPriorityRoute(testPriorityBtn);
+            
+            const tabButton = e.target.closest('.tab-button');
+            if (tabButton) {
+                const tabName = tabButton.dataset.tab;
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                tabButton.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+            }
+
+            const deleteBtn = e.target.closest('.delete-pixel-btn, .delete-bot-btn, .delete-pressel-btn, .delete-checkout-btn');
+            if(deleteBtn) {
+                const id = deleteBtn.dataset.id;
+                let type = '', endpoint = '';
+                if (deleteBtn.classList.contains('delete-pixel-btn')) { type = 'pixels'; endpoint = 'pixels'; }
+                if (deleteBtn.classList.contains('delete-bot-btn')) { type = 'bots'; endpoint = 'bots'; }
+                if (deleteBtn.classList.contains('delete-pressel-btn')) { type = 'pressels'; endpoint = 'pressels'; }
+                if (deleteBtn.classList.contains('delete-checkout-btn')) { type = 'checkouts'; endpoint = 'checkouts'; }
+                
+                if (confirm(`Tem certeza que deseja excluir este item?`)) {
+                    try {
+                        await this.apiRequest(`/api/${endpoint}/${id}`, 'DELETE');
+                        this.state.data[type] = this.state.data[type].filter(item => item.id != id);
+                        this.navigateTo(this.state.currentPage);
+                        this.showToast('Item excluído com sucesso!', 'success');
+                    } catch(err) {}
+                }
+            }
+
+            const filterContainer = e.target.closest('#transactions-date-filter, #dashboard-date-filter');
+            if (filterContainer) {
+                const page = filterContainer.id.split('-')[0];
+                const button = e.target.closest('button[data-period]');
+                const customFilterBtn = e.target.closest(`#apply-custom-date-filter-${page}`);
+                const clearFilterBtn = e.target.closest(`#clear-date-filter-${page}`);
+
+                if (button) { this.handleFilterChange(page, button.dataset.period); }
+                else if (customFilterBtn) {
+                    const startDate = document.getElementById(`${page}-start-date`).value;
+                    const endDate = document.getElementById(`${page}-end-date`).value;
+                    if (startDate && endDate) { this.handleFilterChange(page, 'custom', startDate, endDate); }
+                    else { this.showToast('Por favor, selecione data de início e fim.', 'error'); }
+                } else if (clearFilterBtn) { this.handleFilterChange(page, 'all'); }
+            }
+        });
+
+        document.addEventListener('submit', async (e) => {
+            const form = e.target.closest('form');
+            if (!form || form.id === 'loginForm' || form.id === 'registerForm') return;
+            
+            e.preventDefault();
+            const button = form.querySelector('button[type="submit"]');
+            if (!button) return;
+
+            const originalButtonText = button.innerHTML;
+            button.innerHTML = 'Salvando...';
+            button.disabled = true;
+            
+            const data = Object.fromEntries(new FormData(form).entries());
+
+            try {
+                if (form.id === 'pixelForm') {
+                    const newPixel = await this.apiRequest('/api/pixels', 'POST', data);
+                    if (newPixel) {
+                        this.state.data.pixels.unshift(newPixel);
+                        this.navigateTo('pixels');
+                        this.showToast('Pixel adicionado com sucesso!', 'success');
+                    }
+                } 
+                else if (form.id === 'botForm') {
+                    const newBot = await this.apiRequest('/api/bots', 'POST', data);
+                    if (newBot) {
+                        this.state.data.bots.unshift(newBot);
+                        this.navigateTo('bots');
+                        this.showToast('Bot adicionado com sucesso!', 'success');
+                    }
+                }
+                else if (form.id === 'checkoutForm') {
+                    const pixel_ids = Array.from(form.querySelectorAll('input[name="pixel_ids"]:checked')).map(cb => cb.value);
+                    if (pixel_ids.length === 0) {
+                        this.showToast('Selecione ao menos um pixel.', 'error');
+                        throw new Error("Validação falhou: nenhum pixel selecionado.");
+                    }
+                    const payload = { ...data, pixel_ids };
+                    const newCheckout = await this.apiRequest('/api/checkouts', 'POST', payload);
+                    if (newCheckout) {
+                        this.state.data.checkouts.unshift(newCheckout);
+                        this.navigateTo('checkouts');
+                        this.showToast('Checkout criado com sucesso!', 'success');
+                        this.generateCheckoutHTML(newCheckout.id);
+                    }
+                }
+                else if (form.id === 'presselForm') {
+                    const pixel_ids = Array.from(form.querySelectorAll('input[name="pixel_ids"]:checked')).map(cb => cb.value);
+                    if (pixel_ids.length === 0) {
+                        this.showToast('Selecione ao menos um pixel.', 'error');
+                        throw new Error("Validação falhou: nenhum pixel selecionado.");
+                    }
+                    const payload = { ...data, pixel_ids };
+                    const newPressel = await this.apiRequest('/api/pressels', 'POST', payload);
+                    if (newPressel) {
+                        this.state.data.pressels.unshift(newPressel);
+                        this.navigateTo('pressels');
+                        this.showToast('Pressel criada com sucesso!', 'success');
+                        this.generatePresselCode(newPressel); 
+                    }
+                }
+                else if (form.id === 'pixSettingsForm') {
+                    const savedSettings = await this.apiRequest('/api/settings/pix', 'POST', data);
+                    if(savedSettings) {
+                        this.state.data.settings = { ...this.state.data.settings, ...savedSettings };
+                        this.showToast('Configurações salvas com sucesso!', 'success');
+                    }
+                }
+                 else if (form.id === 'utmifySettingsForm') {
+                    const savedSettings = await this.apiRequest('/api/settings', 'POST', data); // Supondo um endpoint genérico
+                    if(savedSettings) {
+                       this.state.data.settings = { ...this.state.data.settings, ...savedSettings };
+                       this.showToast('Integrações salvas!', 'success');
+                    }
+                }
+            } catch(err) {
+                console.error("Falha ao submeter formulário:", err);
+            } finally {
+                if(button){
+                    button.innerHTML = originalButtonText;
+                    button.disabled = false;
+                }
+            }
+        });
+
+        document.addEventListener('change', e => {
+            if (e.target.id === 'value-type-selector') {
+                const container = document.getElementById('fixed-value-container');
+                if (container) {
+                    container.style.display = e.target.value === 'fixed' ? 'block' : 'none';
+                }
+            }
+            if (e.target.id === 'flow-type-selector') {
+                const container = document.getElementById('flow-config-container');
+                if (!container) return;
+                if (e.target.value === 'pix_flow') {
+                    container.innerHTML = `<h4 class="text-md font-semibold mt-2 mb-1 text-indigo-400">Conteúdo da Mensagem</h4><input id="mass-message-image-url" type="url" class="form-input w-full p-2" placeholder="URL da Imagem (Opcional)"><textarea id="mass-message-initial-text" class="form-input w-full p-2 mt-2" rows="3" placeholder="Mensagem principal... Ex: Olá, gere seu PIX abaixo."></textarea><input id="mass-message-cta-button-text" class="form-input w-full p-2 mt-2" placeholder="Texto do Botão (Ex: Gerar PIX Agora)"><h4 class="text-md font-semibold mt-4 mb-1 text-indigo-400">Valor do PIX</h4><input id="mass-message-pix-value" type="number" step="0.01" class="form-input w-full p-2" placeholder="Valor em REAIS (Ex: 19.90)">`;
+                } else {
+                    container.innerHTML = `<h4 class="text-md font-semibold mt-2 mb-1 text-indigo-400">Conteúdo da Mensagem</h4><input id="mass-message-image-url" type="url" class="form-input w-full p-2" placeholder="URL da Imagem (Opcional)"><textarea id="mass-message-initial-text" class="form-input w-full p-2 mt-2" rows="3" placeholder="Mensagem principal..."></textarea><div class="grid grid-cols-2 gap-2 mt-2"><input id="mass-message-cta-button-text" class="form-input w-full p-2" placeholder="Texto do Botão (Ex: Acessar Site)"><input id="mass-message-external-url" type="url" class="form-input w-full p-2" placeholder="https://seu-link.com"></div>`;
+                }
+            }
+            if (e.target.name === 'bot_ids[]') {
+                this.updateDispatchUserCount();
+            }
+        });
+    },
+
+    async apiRequest(endpoint, method = 'GET', body = null) {
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (this.state.token) {
+                headers['Authorization'] = `Bearer ${this.state.token}`;
+            }
+            const options = { method, headers };
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            const response = await fetch(`${this.state.API_BASE_URL}${endpoint}`, options);
+            if (response.status === 204) return null;
+            const data = await response.json();
+            if (!response.ok) {
+                throw data;
+            }
+            return data;
+        } catch (error) {
+            this.showToast(error.message || 'Falha na conexão com o servidor', 'error');
+            if (error.message && (error.message.includes('inválido') || error.message.includes('expirado'))) {
+                this.logout();
+            }
+            throw error;
+        }
+    },
+
+    async login(email, password) {
+        try {
+            const data = await this.apiRequest('/api/sellers/login', 'POST', { email, password });
+            this.state.token = data.token;
+            localStorage.setItem('tracker_token', data.token);
+            window.location.reload();
+        } catch (e) { /* Erro já tratado em apiRequest */ }
+    },
+
+    async register(name, email, password) {
+        try {
+            const data = await this.apiRequest('/api/sellers/register', 'POST', { name, email, password });
+            this.showToast(data.message || 'Cadastro realizado! Faça o login.', 'success');
+            this.renderLogin('login');
+        } catch (e) { /* Erro já tratado em apiRequest */ }
+    },
+
+    logout() {
+        this.state.token = null;
+        localStorage.removeItem('tracker_token');
+        window.location.reload();
+    },
+    
+    showDispatchModal() {
+        // Implementação futura ou simulada
+    },
+
+    async updateDispatchUserCount() {
+        // Implementação futura ou simulada
+    },
+
+    async sendMassMessage(button) {
+        // Implementação futura ou simulada
+    },
+
+    async viewDispatchDetails(logId) {
+        this.showToast('Função de detalhes ainda não implementada.', 'warning');
+    },
+
+    async navigateTo(page) {
+        this.state.currentPage = page;
+        const contentContainer = document.getElementById('content');
+        if (!contentContainer || !this.templates[page]) return;
+        contentContainer.innerHTML = `<div class="flex items-center justify-center h-full"><svg class="animate-spin h-6 w-6 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
+        setTimeout(() => {
+            contentContainer.innerHTML = this.templates[page]();
+            document.querySelectorAll('.nav-link').forEach(item => item.classList.toggle('active', item.dataset.target === page));
+            if (page === 'dashboard') {
+                this.fetchDashboardMetrics();
+            } else if (page === 'transactions') {
+                this.renderTransactionsTable();
+            } else if (page === 'settings') {
+                this.updateAllPixStatusIndicators();
+                this.updateAllBotStatusIndicators();
+            } else if (page === 'bots') {
+                this.updateAllBotStatusIndicators();
+            } else if (page === 'dispatches') {
+                this.renderDispatchesChart();
+            }
+        }, 50);
+    },
+    
+    async fetchDashboardMetrics() {
+        // Simulação enquanto o back-end não está pronto
+        this.state.data.dashboard = {
+            total_clicks: (Math.random() * 5000 + 1000).toFixed(0),
+            total_pix_generated: (Math.random() * 800 + 200).toFixed(0),
+            total_pix_paid: (Math.random() * 200 + 50).toFixed(0),
+            total_revenue: (Math.random() * 20000 + 5000),
+            paid_revenue: (Math.random() * 10000 + 1000),
+            bots_performance: this.state.data.bots.map(b => ({
+                bot_name: b.bot_name,
+                total_clicks: (Math.random() * 1000).toFixed(0),
+                total_pix_paid: (Math.random() * 50).toFixed(0),
+                paid_revenue: (Math.random() * 2000)
+            })),
+            clicks_by_state: [{state: 'SP', total_clicks: 1200}, {state: 'RJ', total_clicks: 850}, {state: 'MG', total_clicks: 600}],
+            daily_revenue: Array.from({length: 7}, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                return { date: d.toISOString().split('T')[0], revenue: Math.random() * 1500 };
+            })
+        };
+        this.renderRevenueChart();
+        this.fetchAchievementsAndRanking();
+    },
+
+    async fetchAchievementsAndRanking() {
+        // Simulação
+    },
+
+    renderTransactionsTable() {
+        const tableBody = document.getElementById('transactions-table-body');
+        if(tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-8">Nenhuma transação encontrada.</td></tr>';
+    },
+    
+    handleFilterChange(page, period, customStartDate, customEndDate) {
+        this.showToast(`Filtro aplicado: ${period}`, 'success');
+        if (page === 'dashboard') {
+            this.fetchDashboardMetrics();
+        } else if (page === 'transactions') {
+            this.renderTransactionsTable();
+        }
+    },
+
+    renderRevenueChart() {
+        const ctx = document.getElementById('revenueChart');
+        if (!ctx) return;
+        // Simulação com dados aleatórios
+    },
+
+    renderDispatchesChart() {
+        const ctx = document.getElementById('dispatchesChart');
+        if (!ctx) return;
+        // Simulação
+    },
+    
+    generatePresselCode(pressel) {
+        const { settings, pixels } = this.state.data;
+        if (!settings.apiKey) return this.showToast('API Key não encontrada. Relogue na plataforma.', 'error');
+        const selectedPixels = pixels.filter(p => pressel.pixel_ids.includes(p.id));
+        const pixelsToTrackJSON = JSON.stringify(selectedPixels.map(p => ({ id: p.pixel_id })), null, 2);
+        const htmlContent = `...`; // O template HTML longo vai aqui
+        document.getElementById('modal-container').innerHTML = this.templates.modal(`Código da Pressel: ${pressel.name}`, `...`);
+        document.getElementById('pressel-code-textarea').value = htmlContent;
+    },
+
+    generateCheckoutHTML(checkoutId) {
+        const checkout = this.state.data.checkouts.find(c => c.id == checkoutId);
+        const { settings, pixels } = this.state.data;
+        if (!checkout || !settings.apiKey) return;
+        const selectedPixels = pixels.filter(p => checkout.pixel_ids.includes(p.id));
+        const fbqInitBlock = selectedPixels.map(p => `fbq('init', '${p.pixel_id}');`).join('\n        ');
+        const htmlTemplate = `...`; // O template HTML gigante do checkout vai aqui
+        const modalContent = `...`;
+        document.getElementById('modal-container').innerHTML = this.templates.modal(`Código do Checkout: ${checkout.name}`, modalContent);
+        document.getElementById('checkout-code-textarea').value = htmlTemplate.trim();
+    },
+
+    async testIndividualPixConnection(provider, button) {
+        const originalText = button.innerHTML;
+        button.innerHTML = 'Testando...';
+        button.disabled = true;
+        this.updatePixStatusIndicator(provider, 'testing');
+        const form = document.getElementById('pixSettingsForm');
+        const formData = Object.fromEntries(new FormData(form).entries());
+        try {
+            await this.apiRequest('/api/settings/pix', 'POST', formData);
+            const result = await this.apiRequest('/api/pix/test-provider', 'POST', { provider });
+            localStorage.setItem(`pix_status_${provider}`, 'success');
+            localStorage.setItem(`pix_timestamp_${provider}`, Date.now());
+            const successModalContent = `<div class="space-y-4 text-sm"><div class="flex justify-between items-center"><span class="font-semibold text-gray-400">Provedor:</span> <span class="text-white font-medium">${result.provider}</span></div><div class="flex justify-between items-center"><span class="font-semibold text-gray-400">Tempo de Resposta:</span> <span class="text-white font-medium">${result.responseTime}</span></div><hr class="border-gray-700"><div><p class="font-semibold text-gray-400 mb-2">PIX Copia e Cola de Teste (R$ 0,50):</p><textarea id="pix-test-key" class="form-input w-full p-2 font-mono text-xs" rows="4" readonly>${result.qr_code_text}</textarea><button class="copy-btn btn w-full mt-2 py-2 text-sm" data-target="#pix-test-key">Copiar Chave PIX</button></div></div>`;
+            document.getElementById('modal-container').innerHTML = this.templates.modal('✅ Conexão Bem-sucedida!', successModalContent);
+        } catch (error) {
+            localStorage.setItem(`pix_status_${provider}`, 'failure');
+            localStorage.setItem(`pix_timestamp_${provider}`, Date.now());
+            const errorModalContent = `<div class="text-center"><p class="text-lg font-medium text-red-400 mb-2">Falha na Conexão</p><p class="text-sm text-gray-400">${error.message || 'Ocorreu um erro desconhecido.'}</p></div>`;
+            document.getElementById('modal-container').innerHTML = this.templates.modal('❌ Erro no Teste', errorModalContent);
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+            setTimeout(() => this.updatePixStatusIndicator(provider), 100);
+        }
+    },
+
+    async testPriorityRoute(button) {
+        this.showToast('Teste de Rota de Prioridade não implementado.', 'warning');
+    },
+
+    async testBotConnection(botId, button) {
+        this.showToast(`Teste de conexão para Bot #${botId} não implementado.`, 'warning');
+    },
+
+    updateAllBotStatusIndicators() {
+        if (this.state.data.bots && this.state.data.bots.length > 0) {
+            this.state.data.bots.forEach(bot => this.updateBotStatusIndicator(bot.id));
+        }
+    },
+
+    updateBotStatusIndicator(botId, mode) {
+        const indicator = document.getElementById(`status-indicator-bot-${botId}`);
+        if (!indicator) return;
+        indicator.textContent = 'Não testado';
+        indicator.className = 'status-indicator unknown';
+    },
+
+    updateAllPixStatusIndicators() {
+        const providers = ['pushinpay', 'stripe', 'cnpay', 'oasyfy', 'syncpay'];
+        providers.forEach(provider => this.updatePixStatusIndicator(provider));
+    },
+
+    updatePixStatusIndicator(provider, mode) {
+        const indicator = document.getElementById(`status-indicator-${provider}`);
+        if (!indicator) {
+            console.error(`[updatePixStatusIndicator] Elemento de status para '${provider}' não encontrado no DOM.`);
+            return; 
+        }
+        if (mode === 'testing') {
+            indicator.textContent = 'Testando...';
+            indicator.className = 'status-indicator testing';
+            return;
+        }
+        const status = localStorage.getItem(`pix_status_${provider}`);
+        const timestamp = localStorage.getItem(`pix_timestamp_${provider}`);
+        console.log(`[updatePixStatusIndicator] Atualizando status para '${provider}'. Status lido: '${status}'`);
+        if (status === 'success' && timestamp) {
+            indicator.textContent = `Ativo (Testado ${this.formatTimeAgo(timestamp)})`;
+            indicator.className = 'status-indicator success';
+        } else if (status === 'failure' && timestamp) {
+            indicator.textContent = `Falhou (Testado ${this.formatTimeAgo(timestamp)})`;
+            indicator.className = 'status-indicator failure';
+        } else {
+            indicator.textContent = 'Não testado';
+            indicator.className = 'status-indicator unknown';
+        }
+    },
+
+    formatTimeAgo(timestamp) {
+        const seconds = Math.floor((Date.now() - timestamp) / 1000);
+        if (seconds < 60) return "agora";
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `há ${minutes} min`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `há ${hours}h`;
+        const days = Math.floor(hours / 24);
+        return `há ${days}d`;
+    },
+
+    showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        let bgColor = type === 'success' ? 'bg-green-600' : (type === 'error' ? 'bg-red-600' : 'bg-yellow-500');
+        toast.className = `fixed bottom-5 right-5 ${bgColor} text-white py-2 px-4 rounded-lg shadow-lg animate-fade-in z-50`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.transition = 'opacity 0.5s ease';
+            toast.style.opacity = '0';
+            toast.addEventListener('transitionend', () => toast.remove());
+        }, 4000);
+    }
+};
+
+App.init();
+</script>
+</body>
+</html>

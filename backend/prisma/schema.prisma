@@ -1,0 +1,162 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Seller {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  apiKey String @unique @default(cuid()) // Chave de API única para cada usuário
+
+  // Relações
+  pixels     Pixel[]
+  bots       Bot[]
+  pressels   Pressel[]
+  checkouts  Checkout[]
+  settings   Setting?
+  clicks     Click[]
+  transactions Transaction[]
+
+  @@map("sellers")
+}
+
+model Setting {
+  id      String @id @default(uuid())
+  seller  Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId String @unique
+
+  // Gateways de PIX
+  pix_provider_primary   String?
+  pix_provider_secondary String?
+  pix_provider_tertiary  String?
+
+  pushinpay_token     String?
+  cnpay_public_key    String?
+  cnpay_secret_key    String?
+  oasyfy_public_key   String?
+  oasyfy_secret_key   String?
+  syncpay_client_id   String?
+  syncpay_client_secret String?
+
+  // Gateway de Cartão (Stripe)
+  stripe_public_key String?
+  stripe_secret_key String?
+
+  // Outras Integrações (exemplo, se houver)
+  // utmify_api_token String?
+
+  @@map("settings")
+}
+
+model Pixel {
+  id             String   @id @default(uuid())
+  account_name   String
+  pixel_id       String
+  meta_api_token String
+  seller         Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId       String
+
+  pressels  Pressel[]  @relation("PresselPixels")
+  checkouts Checkout[] @relation("CheckoutPixels")
+
+  @@map("pixels")
+}
+
+model Bot {
+  id        String   @id @default(uuid())
+  bot_name  String
+  bot_token String
+  seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId  String
+  pressels  Pressel[]
+
+  @@map("bots")
+}
+
+model Pressel {
+  id             String   @id @default(uuid())
+  name           String
+  white_page_url String?
+  seller         Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId       String
+  bot            Bot      @relation(fields: [botId], references: [id])
+  botId          String
+  pixels         Pixel[]  @relation("PresselPixels")
+  clicks         Click[]
+
+  @@map("pressels")
+}
+
+model Checkout {
+  id                String   @id @default(uuid())
+  name              String
+  product_name      String
+  redirect_url      String
+  value_type        String // "fixed" ou "variable"
+  fixed_value_cents Int?
+  seller            Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId          String
+
+  pixels    Pixel[]    @relation("CheckoutPixels")
+  clicks    Click[]
+
+  @@map("checkouts")
+}
+
+model Click {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId  String
+
+  // Origem do clique
+  presselId  String?
+  pressel    Pressel?  @relation(fields: [presselId], references: [id])
+  checkoutId String?
+  checkout   Checkout? @relation(fields: [checkoutId], references: [id])
+
+  // Rastreamento
+  referer    String?
+  user_agent String?
+  fbclid     String?
+  fbp        String?
+  fbc        String?
+  utm_source   String?
+  utm_medium   String?
+  utm_campaign String?
+  utm_content  String?
+  utm_term     String?
+
+  transaction Transaction?
+
+  @@map("clicks")
+}
+
+model Transaction {
+  id           String   @id @default(uuid())
+  clickId      String   @unique
+  click        Click    @relation(fields: [clickId], references: [id])
+  seller       Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId     String
+
+  status       String   @default("pending") // pending, paid, failed
+  pix_value    Float
+  provider     String   // pushinpay, stripe, etc.
+  transaction_id_provider String // ID que vem do gateway
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("transactions")
+}
