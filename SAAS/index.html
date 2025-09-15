@@ -1173,7 +1173,6 @@ async fetchDashboardMetrics() {
 
             const presselPixels = pressel.pixel_ids || [];
             const selectedPixels = pixels.filter(p => presselPixels.includes(p.id));
-            const pixelsToTrackJSON = JSON.stringify(selectedPixels.map(p => ({ id: p.pixel_id })), null, 2);
 
             const config = {
                 API_BASE_URL: this.state.API_BASE_URL,
@@ -1181,7 +1180,7 @@ async fetchDashboardMetrics() {
                 PRESSEL_ID: pressel.id,
                 TELEGRAM_USERNAME: pressel.bot_name || '',
                 WHITE_PAGE_URL: pressel.white_page_url || 'https://google.com',
-                PIXELS_TO_TRACK: pixelsToTrackJSON
+                PIXELS_TO_TRACK: selectedPixels.map(p => ({ id: p.pixel_id }))
             };
 
             const htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Carregando...</title><script>
@@ -1195,24 +1194,14 @@ async fetchDashboardMetrics() {
             try {
                 const params = new URLSearchParams(window.location.search);
                 const body = {
-                    presselId: CONFIG.PRESSEL_ID,
-                    referer: document.referrer || null,
-                    fbclid: params.get("fbclid") || null,
-                    fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1] || null,
-                    fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1] || null,
-                    user_agent: navigator.userAgent,
-                    utm_source: params.get("utm_source"),
-                    utm_campaign: params.get("utm_campaign"),
-                    utm_medium: params.get("utm_medium"),
-                    utm_content: params.get("utm_content"),
-                    utm_term: params.get("utm_term")
+                    presselId: CONFIG.PRESSEL_ID, referer: document.referrer || null,
+                    fbclid: params.get("fbclid"), fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1], fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1],
+                    user_agent: navigator.userAgent, utm_source: params.get("utm_source"), utm_campaign: params.get("utm_campaign"),
+                    utm_medium: params.get("utm_medium"), utm_content: params.get("utm_content"), utm_term: params.get("utm_term")
                 };
                 const response = await fetch(\`\${CONFIG.API_BASE_URL}/api/registerClick\`, {
                     method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "x-api-key": CONFIG.SELLER_API_KEY
-                    },
+                    headers: { "Content-Type": "application/json", "x-api-key": CONFIG.SELLER_API_KEY },
                     body: JSON.stringify(body)
                 });
                 const data = await response.json();
@@ -1227,7 +1216,7 @@ async fetchDashboardMetrics() {
         }
         setTimeout(handleRedirect, 500);
     <\/script>
-    <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src='https://connect.facebook.net/en_US/fbevents.js';s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script');const pixels = JSON.parse(CONFIG.PIXELS_TO_TRACK); if(pixels){pixels.forEach(p=>{fbq('init',p.id)})}fbq('track','PageView');<\/script></head><body><p>Redirecionando...</p></body></html>`;
+    <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src='https://connect.facebook.net/en_US/fbevents.js';s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script');if(CONFIG.PIXELS_TO_TRACK){CONFIG.PIXELS_TO_TRACK.forEach(p=>{fbq('init',p.id)})}fbq('track','PageView');<\/script></head><body><p>Redirecionando...</p></body></html>`;
 
             const modalContent = `<p class="text-sm text-text-secondary mb-4">Copie o código abaixo e cole no HTML da sua página.</p><textarea id="pressel-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#pressel-code-textarea">Copiar Código</button>`;
             document.getElementById('modal-container').innerHTML = this.templates.modal(`Código da Pressel: ${pressel.name}`, modalContent);

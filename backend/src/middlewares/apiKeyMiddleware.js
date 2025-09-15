@@ -1,27 +1,18 @@
-// backend/src/middlewares/apiKeyMiddleware.js
-
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 module.exports = async (req, res, next) => {
-    // Procura a chave no header (padrão) OU no corpo da requisição (para compatibilidade)
-    const apiKey = req.headers['x-api-key'] || req.body.sellerApiKey;
+    // Procura a chave APENAS no cabeçalho (header)
+    const apiKey = req.headers['x-api-key'];
 
     if (!apiKey) {
-        // Se não encontrar em nenhum dos dois lugares, retorna o erro.
-        return res.status(401).json({ message: 'API Key não fornecida no header (x-api-key) ou no corpo (sellerApiKey).' });
+        return res.status(401).json({ message: 'Header x-api-key não fornecido.' });
     }
-
     try {
-        const seller = await prisma.seller.findUnique({
-            where: { apiKey }
-        });
-
+        const seller = await prisma.seller.findUnique({ where: { apiKey } });
         if (!seller) {
             return res.status(403).json({ message: 'API Key inválida.' });
         }
-
-        // Anexa o vendedor encontrado na requisição para ser usado pelo controller
         req.seller = seller;
         next();
     } catch (error) {
