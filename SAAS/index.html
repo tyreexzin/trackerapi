@@ -3,172 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker 🎯</title>
+    <title>HTracker 🎯</title>
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#111827"/>
+    <meta name="theme-color" content="#121212"/>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #111827;       /* gray-900 */
-            --bg-secondary: #1f2937;    /* gray-800 */
-            --bg-card: rgba(31, 41, 55, 0.6); /* gray-800 com transparência */
-            --border-color: #374151;    /* gray-700 */
-            --accent-primary: #818cf8;  /* indigo-400 */
-            --accent-secondary: #6366f1;/* indigo-500 */
-            --text-primary: #f9fafb;    /* gray-50 */
-            --text-secondary: #9ca3af;  /* gray-400 */
-            --success: #4ade80;         /* green-400 */
-            --danger: #f87171;          /* red-400 */
-            --warning: #facc15;         /* yellow-400 */
+            --bg-primary: #121212;      /* Quase preto */
+            --bg-secondary: #1a1a1a;    /* Cinza escuro */
+            --bg-card: #1a1a1a;         /* Consistente com secondary */
+            --border-color: #2e2e2e;    /* Cinza mais claro para bordas */
+            --accent-primary: #888888; /* Cinza médio para destaque */
+            --accent-secondary: #666666;/* Cinza mais escuro para destaque */
+            --text-primary: #f0f0f0;    /* Branco suave */
+            --text-secondary: #b0b0b0; /* Cinza claro para texto secundário */
+            --success: #22c55e;         /* Verde para sucesso */
+            --danger: #ef4444;          /* Vermelho para perigo */
+            --warning: #f59e0b;         /* Amarelo para aviso */
         }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Chakra Petch', sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
             background-image:
-                radial-gradient(circle at 1px 1px, rgba(129, 140, 248, 0.1) 1px, transparent 0),
-                radial-gradient(circle at top left, rgba(129, 140, 248, 0.15), transparent 30%),
-                radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.15), transparent 40%);
-            background-size: 20px 20px, 100% 100%, 100% 100%;
+                radial-gradient(circle at 1px 1px, rgba(136, 136, 136, 0.08) 1px, transparent 0), /* Pontos cinzas sutis */
+                linear-gradient(to right, #1a1a1a 1px, transparent 1px), /* Linhas verticais */
+                linear-gradient(to bottom, #1a1a1a 1px, transparent 1px); /* Linhas horizontais */
+            background-size: 20px 20px, 20px 20px, 20px 20px;
+            background-position: -1px -1px;
+        }
+        h1, h2, h3, h4, .font-bold {
+            font-family: 'Chakra Petch', sans-serif;
         }
         .card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(100, 100, 100, 0.3); /* Sombra acentuada no hover */
         }
         .form-input, .form-select, .form-date {
-            background-color: rgba(17, 24, 39, 0.7);
+            background-color: var(--bg-primary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            transition: all 0.3s ease;
-            border-radius: 0.375rem;
+            border-radius: 0.4rem;
+            padding: 0.6rem 1rem;
+            transition: all 0.2s ease;
         }
         .form-input:focus, .form-select:focus, .form-date:focus {
             outline: none;
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-        .form-date::-webkit-calendar-picker-indicator {
-            filter: invert(0.8);
+            box-shadow: 0 0 0 3px rgba(136, 136, 136, 0.3);
         }
         .btn {
-            background-color: var(--accent-secondary);
-            color: white;
-            transition: all 0.3s ease;
-            border: 1px solid var(--accent-primary);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        .btn:before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 300%;
-            height: 300%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
-            transform: translate(-50%, -50%) scale(0);
-            transition: transform 0.5s ease;
-        }
-        .btn:hover:before {
-            transform: translate(-50%, -50%) scale(1);
+            background-color: var(--accent-secondary); /* Cinza escuro para o botão principal */
+            color: var(--text-primary); /* Texto branco no botão */
+            font-weight: 600;
+            border-radius: 0.4rem;
+            transition: all 0.2s ease-in-out;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
         .btn:hover {
-            background-color: var(--accent-primary);
-            box-shadow: 0 0 25px rgba(129, 140, 248, 0.5);
+            background-color: var(--accent-primary); /* Cinza mais claro no hover */
             transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(100, 100, 100, 0.2);
         }
-        .btn:disabled { background-color: #374151; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn-red { background-color: #991b1b; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
-        .btn-red:hover { background-color: #b91c1c; box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
-        .btn-green { background-color: #047857; border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
-        .btn-green:hover { background-color: #059669; box-shadow: 0 0 25px rgba(16, 185, 129, 0.5); }
-        .btn-secondary { background-color: var(--border-color); border-color: #4b5563; box-shadow: none; }
-        .btn-secondary:hover { background-color: #4b5563; transform: translateY(-2px); }
+        .btn:disabled { background-color: #333333; color: #777777; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .top-nav {
+            background-color: rgba(26, 26, 26, 0.8); /* Fundo semi-transparente */
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border-color);
+        }
         .nav-link {
             color: var(--text-secondary);
-            position: relative;
-            transition: all 0.3s ease;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .nav-link:before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            height: 0;
-            width: 4px;
-            background-color: var(--accent-primary);
-            border-radius: 0 4px 4px 0;
-            transition: all 0.3s ease;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.3rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease-in-out;
         }
         .nav-link:hover {
-            background-color: rgba(99, 102, 241, 0.1);
+            background-color: rgba(136, 136, 136, 0.1); /* Hover sutil */
             color: var(--text-primary);
         }
         .nav-link.active {
-            background-color: rgba(99, 102, 241, 0.15);
-            color: white;
+            color: var(--text-primary); /* Link ativo em branco */
             font-weight: 600;
+            border-bottom: 2px solid var(--accent-primary); /* Linha de destaque em cinza médio */
+            background-color: rgba(136, 136, 136, 0.08);
         }
-        .nav-link.active:before {
-            height: 60%;
+        .metric-card {
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
         }
-        .modal { display: none; }
-        .modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            z-index: 50;
-            inset: 0;
-            background-color: rgba(17, 24, 39, 0.7);
-            backdrop-filter: blur(8px);
+        .metric-card:before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(45deg, rgba(136,136,136,0.05) 0%, transparent 50%, rgba(136,136,136,0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-        .table-custom th, .table-custom td { padding: 1rem; border-bottom: 1px solid var(--border-color); text-align: left; }
-        .table-custom tbody tr:hover { background-color: rgba(31, 41, 55, 0.5); }
-        .status-indicator { font-size: 0.75rem; font-weight: 500; padding: 0.25rem 0.6rem; border-radius: 9999px; display: inline-block; margin-left: 0.75rem; vertical-align: middle; }
-        .status-indicator.success { background: linear-gradient(to right, rgba(74, 222, 128, 0.1), rgba(16, 185, 129, 0.1)); color: var(--success); border: 1px solid rgba(74, 222, 128, 0.2); }
-        .status-indicator.failure { background: linear-gradient(to right, rgba(248, 113, 113, 0.1), rgba(185, 28, 28, 0.1)); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.2); }
-        .status-indicator.unknown { background-color: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.2); }
-        .status-indicator.testing { background: linear-gradient(to right, rgba(129, 140, 248, 0.1), rgba(99, 102, 241, 0.1)); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.2); }
-        .tab-button { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 0.5rem 1rem; border-radius: 0.375rem; transition: all 0.3s ease; }
-        .tab-button:hover { background-color: var(--bg-secondary); color: var(--text-primary); }
-        .tab-button.active { background-color: rgba(99, 102, 241, 0.1); border-color: var(--accent-secondary); color: white; font-weight: 600; box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.5s ease-out; }
-        .progress-bar { background-color: #374151; border-radius: 999px; overflow: hidden; height: 8px; }
-        .progress-bar-inner { height: 100%; transition: width 0.5s ease; }
-        .metric-card { position: relative; overflow: hidden; border-radius: 0.75rem; padding: 1.5rem; text-align: center; }
-        .metric-card:before { content: ''; position: absolute; top: -50%; left: -50%; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 70%); transition: transform 0.8s ease; transform-origin: center center; transform: scale(0); }
-        .metric-card:hover:before { transform: scale(3); }
-        #app-loader { display: flex; align-items: center; justify-content: center; height: 100vh; font-size: 1.25rem; }
+        .metric-card:hover:before {
+            opacity: 1;
+        }
+        .metric-card h3 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .metric-card p {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary); /* Valor da métrica em branco */
+        }
+        .table-custom th {
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 1rem;
+        }
+        .table-custom td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .table-custom tbody tr:hover {
+            background-color: rgba(136, 136, 136, 0.05);
+        }
+        .status-indicator {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+        .status-indicator.success { background-color: rgba(34, 197, 94, 0.2); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.3); }
+        .status-indicator.failure { background-color: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .status-indicator.unknown { background-color: rgba(176, 176, 176, 0.2); color: var(--text-secondary); border: 1px solid rgba(176, 176, 176, 0.3); }
+        .status-indicator.testing { background-color: rgba(136, 136, 136, 0.2); color: var(--accent-primary); border: 1px solid rgba(136, 136, 136, 0.3); }
+
+        /* Estilo para a tela de login/registro */
+        .auth-container {
+            background-color: rgba(26, 26, 26, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            text-align: center;
+        }
+        .auth-container h1 {
+            color: var(--text-primary); /* Título em branco */
+            font-size: 2.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .auth-container p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        .auth-container a {
+            color: var(--accent-primary); /* Links em cinza médio */
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-container a:hover {
+            text-decoration: underline;
+        }
+        .mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 30;
+    transition: opacity 0.3s ease-in-out;
+}
+.mobile-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0; 
+    bottom: 0;
+    width: 16rem; /* 256px */
+    background-color: var(--bg-secondary); /* Corrigido para a cor do tema */
+    padding: 1rem;
+    z-index: 40;
+    transition: transform 0.3s ease-in-out;
+    border-left: 1px solid var(--border-color); /* Alterado de 'border-right' para 'border-left' */
+}
     </style>
 </head>
 <body>
-    <div id="app">
-        <div id="app-loader">
-            <svg class="animate-spin h-8 w-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <div id="app" class="min-h-screen">
+        <div id="app-loader" class="flex items-center justify-center h-screen">
+            <svg class="animate-spin h-8 w-8 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span class="ml-3">Carregando...</span>
+            <span class="ml-3 text-lg text-gray-400">Carregando HTracker Digital...</span>
         </div>
     </div>
     <div id="modal-container"></div>
@@ -176,7 +225,7 @@
 <script>
     const App = {
         state: {
-            API_BASE_URL: 'https://trackerapi.vercel.app',
+            API_BASE_URL: 'https://trackerapi-3j20.onrender.com',
             token: null,
             data: {
                 pixels: [], bots: [], pressels: [], checkouts: [],
@@ -236,141 +285,169 @@ async init() {
             },
             loginForm() {
                 return `
-                <div class="card p-8 rounded-2xl shadow-lg w-full max-w-md animate-fade-in">
-                    <div class="text-center mb-8">
+                <div class="auth-container w-full max-w-md animate-fade-in">
+                    <div class="mb-8">
                         <div class="flex items-center justify-center gap-3">
-                            <span class="text-4xl">🎯</span>
-                            <h1 class="text-4xl font-bold text-white">Tracker</h1>
+                            <span class="text-4xl text-text-primary">🎯</span>
+                            <h1 class="text-3xl font-bold">HTracker</h1>
                         </div>
-                        <p class="text-gray-400 mt-2">Acesse sua conta para continuar.</p>
+                        <p class="mt-2">Acesse sua interface digital.</p>
                     </div>
-                    <form id="loginForm" class="space-y-6">
-                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">E-mail</label><input name="email" type="email" required class="form-input w-full p-3"></div>
-                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">Senha</label><input name="password" type="password" required class="form-input w-full p-3"></div>
-                        <button type="submit" class="btn w-full font-semibold py-3 rounded-md">Entrar na Plataforma</button>
+                    <form id="loginForm" class="space-y-4">
+                        <div><label class="text-sm font-medium text-text-secondary mb-1 block">E-mail</label><input name="email" type="email" required class="form-input w-full"></div>
+                        <div><label class="text-sm font-medium text-text-secondary mb-1 block">Senha</label><input name="password" type="password" required class="form-input w-full"></div>
+                        <button type="submit" class="btn w-full !py-3 !text-sm">Conectar</button>
                     </form>
-                    <div class="text-center mt-6"><a href="#" id="showRegister" class="text-sm text-indigo-400 hover:text-indigo-300 hover:underline">Não tem uma conta? Cadastre-se agora</a></div>
+                    <div class="mt-6"><a href="#" id="showRegister">Não possui credenciais? Crie uma conta</a></div>
                 </div>`;
             },
             registerForm() {
                 return `
-                <div class="card p-8 rounded-2xl shadow-lg w-full max-w-md animate-fade-in">
-                     <div class="text-center mb-8">
+                <div class="auth-container w-full max-w-md animate-fade-in">
+                    <div class="mb-8">
                         <div class="flex items-center justify-center gap-3">
-                           <span class="text-4xl">🎯</span>
-                            <h1 class="text-4xl font-bold text-white">Tracker</h1>
+                           <span class="text-4xl text-text-primary">🎯</span>
+                            <h1 class="text-3xl font-bold">HTracker</h1>
                         </div>
-                        <p class="text-gray-400 mt-2">Crie sua conta e comece a rastrear.</p>
+                        <p class="mt-2">Crie seu perfil de acesso.</p>
                     </div>
-                    <form id="registerForm" class="space-y-6">
-                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">Nome</label><input name="name" type="text" required class="form-input w-full p-3"></div>
-                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">E-mail</label><input name="email" type="email" required class="form-input w-full p-3"></div>
-                        <div><label class="text-sm font-medium text-gray-400 mb-1 block">Senha (mínimo 8 caracteres)</label><input name="password" type="password" required minlength="8" class="form-input w-full p-3"></div>
-                        <button type="submit" class="btn w-full font-semibold py-3 rounded-md">Criar Minha Conta</button>
+                    <form id="registerForm" class="space-y-4">
+                        <div><label class="text-sm font-medium text-text-secondary mb-1 block">Nome de Usuário</label><input name="name" type="text" required class="form-input w-full"></div>
+                        <div><label class="text-sm font-medium text-text-secondary mb-1 block">E-mail</label><input name="email" type="email" required class="form-input w-full"></div>
+                        <div><label class="text-sm font-medium text-text-secondary mb-1 block">Senha de Acesso</label><input name="password" type="password" required minlength="8" class="form-input w-full"></div>
+                        <button type="submit" class="btn w-full !py-3 !text-sm">Inicializar Conta</button>
                     </form>
-                    <div class="text-center mt-6"><a href="#" id="showLogin" class="text-sm text-indigo-400 hover:text-indigo-300 hover:underline">Já tem uma conta? Faça Login</a></div>
+                    <div class="mt-6"><a href="#" id="showLogin">Já possui credenciais? Faça Login</a></div>
                 </div>`;
             },
-            layout() {
-                return `
-                <div class="relative min-h-screen md:flex">
-                    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-20 md:hidden hidden"></div>
-                    <aside id="sidebar" class="w-64 bg-gray-900/80 backdrop-blur-lg p-4 flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30 border-r border-gray-800 flex">
-                        <div class="text-center py-4 mb-6 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="text-3xl">🎯</span>
-                                <h1 class="text-2xl font-bold text-white">Tracker<span class="text-xs text-red-500 font-semibold ml-2 align-super">BETA</span></h1>
-                            </div>
-                            <button id="close-sidebar-btn" class="md:hidden text-gray-400 text-3xl hover:text-white">&times;</button>
+    layout() {
+    return `
+    <div class="min-h-screen">
+        <header class="top-nav sticky top-0 z-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 flex items-center gap-2">
+                            <span class="text-3xl text-text-primary">🎯</span>
+                            <span class="font-bold text-xl text-text-primary">Tracker</span>
                         </div>
-                        <nav id="sidebarNav" class="flex-grow flex flex-col space-y-1">
-                            <div data-target="dashboard" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>Dashboard</div>
-                            <div data-target="bots" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V5a1 1 0 00-1.447-.894l-4 2A1 1 0 0011 7v10zM4 17a1 1 0 001.447.894l4-2A1 1 0 0010 15V5a1 1 0 00-1.447-.894l-4 2A1 1 0 004 7v10z" /></svg>Gerenciar Bots</div>
-                            <div class="nav-link cursor-not-allowed opacity-60"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>Disparos<span class="text-xs text-red-500 font-semibold ml-2">(EM BREVE)</span></div>
-                            <div data-target="checkouts" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>Criador de Checkout</div>
-                            <div data-target="pressels" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>Criador de Pressel</div>
-                            <div data-target="pixels" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h10a3 3 0 013 3v5a.997.997 0 01-.293-.707zM5 4a1 1 0 00-1 1v.01L8 9.01l4-4.002V5a1 1 0 00-1-1H5z" clip-rule="evenodd" /></svg>Gerenciar Pixels</div>
-                            <div data-target="transactions" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8.433 7.418c.158-.103.346-.196.567-.267v1.698a2.5 2.5 0 00-1.168-.217c-.165 0-.33.018-.488.054a1 1 0 01-.502 1.765l.986.328c.73.243 1.196.96 1.196 1.765 0 1.132-.98 1.99-2.206 1.99-1.225 0-2.205-.858-2.205-1.99 0-.962.63-1.698 1.447-1.938l.986-.329a1 1 0 01.502-1.765z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.5 4.5 0 00-1.838.385l-.234-.14a1 1 0 00-1.18.157l-1 1.732a1 1 0 00.157 1.18l.234.14A4.5 4.5 0 005.5 8.5v.092l-1.07.356a1 1 0 00-.503 1.765l.986.329a2.5 2.5 0 001.09.243v.092a4.5 4.5 0 001.838-.385l.234.14a1 1 0 001.18-.157l1-1.732a1 1 0 00-.157-1.18l-.234-.14a4.5 4.5 0 001.03-2.062V5z" clip-rule="evenodd" /></svg>Transações</div>
-                        <div class="h-px bg-gray-700 my-2"></div>
-                        <div data-target="settings" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" /></svg>API & Gateways</div>
-                        <div data-target="integrations" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0l-1.5-1.5a2 2 0 112.828-2.828l1.5 1.5z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M6.414 11.586a2 2 0 10-2.828 2.828l3 3a2 2 0 002.828 0l1.5-1.5a2 2 0 10-2.828-2.828l-1.5 1.5z" clip-rule="evenodd" /></svg>Integrações</div>
-                        <div data-target="documentation" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>Credenciais</div>
-                    </nav>
-                    <div class="mt-auto"><button id="logoutButton" class="w-full text-gray-400 hover:bg-red-900/50 hover:text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" /></svg>Sair da Conta</button></div>
-                </aside>
-                <div class="flex-1 flex flex-col w-full">
-                    <header class="p-4 md:hidden card flex justify-between items-center sticky top-0 z-10">
-                         <button id="open-sidebar-btn" class="text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                         </button>
-                         <div class="text-lg font-bold">Tracker</div>
-                    </header>
-                    <main id="content" class="flex-1 p-4 md:p-8 overflow-y-auto"></main>
+                        <nav class="hidden md:flex md:ml-10 md:space-x-4">
+                            <div data-target="dashboard" class="nav-link">Dashboard</div>
+                            <div data-target="pixels" class="nav-link">Pixels</div>
+                            <div data-target="bots" class="nav-link">Bots</div>
+                            <div data-target="checkouts" class="nav-link">Checkouts</div>
+                            <div data-target="pressels" class="nav-link">Pressels</div>
+                            <div data-target="transactions" class="nav-link">Transações</div>
+                        </nav>
+                    </div>
+                    <div class="hidden md:flex items-center gap-4">
+                        <div data-target="settings" class="nav-link cursor-pointer">Configurações</div>
+                        <div data-target="documentation" class="nav-link cursor-pointer">Credenciais</div>
+                        <button id="logoutButton" class="text-sm font-medium text-text-secondary hover:text-text-primary">Sair</button>
+                    </div>
+                    <div class="-mr-2 flex md:hidden">
+                        <button id="open-mobile-menu-btn" type="button" class="bg-bg-secondary inline-flex items-center justify-center p-2 rounded-md text-text-secondary hover:text-text-primary focus:outline-none">
+                            <span class="sr-only">Abrir menu</span>
+                            <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        </button>
+                    </div>
                 </div>
-            </div>`;
-        },
-        dateFilterComponent(page) {
-            const { period } = this.state.dateFilter;
-            const btnClasses = "btn-secondary py-1 px-3 rounded-md text-xs";
-            const activeClasses = "active !bg-indigo-500 !border-indigo-400 !text-white";
-            return `
-            <div id="${page}-date-filter" class="card p-3 rounded-lg mb-6 flex flex-wrap items-center gap-2 text-sm">
-                <span class="font-semibold mr-2 text-gray-300">Período:</span>
-                <button data-period="today" class="${btnClasses} ${period === 'today' ? activeClasses : ''}">Hoje</button>
-                <button data-period="yesterday" class="${btnClasses} ${period === 'yesterday' ? activeClasses : ''}">Ontem</button>
-                <button data-period="last7days" class="${btnClasses} ${period === 'last7days' ? activeClasses : ''}">7 Dias</button>
-                <button data-period="thisMonth" class="${btnClasses} ${period === 'thisMonth' ? activeClasses : ''}">Este Mês</button>
-                <div class="flex items-center gap-2 pl-4 border-l border-gray-700 ml-2">
-                     <input type="date" id="${page}-start-date" class="form-date p-1 rounded-md text-xs">
-                     <span class="text-gray-500">até</span>
-                     <input type="date" id="${page}-end-date" class="form-date p-1 rounded-md text-xs">
-                     <button id="apply-custom-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md text-xs">Filtrar</button>
+            </div>
+        </header>
+
+        <div id="mobile-menu-overlay" class="mobile-menu-overlay opacity-0 hidden"></div>
+        
+        <div id="mobile-menu" class="mobile-sidebar transform translate-x-full">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-3xl">🎯</span>
+                    <span class="font-bold text-xl text-text-primary">Tracker</span>
                 </div>
-                <button id="clear-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md ml-auto text-xs">Limpar Filtro</button>
-            </div>`;
-        },
+                <button id="close-mobile-menu-btn" class="p-1 text-text-secondary text-2xl">&times;</button>
+            </div>
+            <nav id="mobile-nav-links" class="flex flex-col space-y-2">
+                <div data-target="dashboard" class="nav-link">Dashboard</div>
+                <div data-target="pixels" class="nav-link">Pixels</div>
+                <div data-target="bots" class="nav-link">Bots</div>
+                <div data-target="checkouts" class="nav-link">Checkouts</div>
+                <div data-target="pressels" class="nav-link">Pressels</div>
+                <div data-target="transactions" class="nav-link">Transações</div>
+                <div class="h-px bg-border-color my-2"></div>
+                <div data-target="settings" class="nav-link">Configurações</div>
+                <div data-target="documentation" class="nav-link">Credenciais</div>
+                <div class="h-px bg-border-color my-2"></div>
+                <button id="logoutButtonMobile" class="w-full text-left nav-link">Sair</button>
+            </nav>
+        </div>
+
+        <main>
+            <div id="content" class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8"></div>
+        </main>
+    </div>`;
+},
+dateFilterComponent(page) {
+    // CORREÇÃO: Usamos App.state em vez de this.state
+    const { period } = App.state.dateFilter; 
+    const btnClasses = "btn-secondary py-1 px-3 rounded-md text-xs";
+    const activeClasses = "active !bg-indigo-500 !border-indigo-400 !text-white";
+    return `
+    <div id="${page}-date-filter" class="card p-3 rounded-lg mb-6 flex flex-wrap items-center gap-2 text-sm">
+        <span class="font-semibold mr-2 text-gray-300">Período:</span>
+        <button data-period="today" class="${btnClasses} ${period === 'today' ? activeClasses : ''}">Hoje</button>
+        <button data-period="yesterday" class="${btnClasses} ${period === 'yesterday' ? activeClasses : ''}">Ontem</button>
+        <button data-period="last7days" class="${btnClasses} ${period === 'last7days' ? activeClasses : ''}">7 Dias</button>
+        <button data-period="thisMonth" class="${btnClasses} ${period === 'thisMonth' ? activeClasses : ''}">Este Mês</button>
+        <div class="flex items-center gap-2 pl-4 border-l border-gray-700 ml-2">
+             <input type="date" id="${page}-start-date" class="form-date p-1 rounded-md text-xs">
+             <span class="text-gray-500">até</span>
+             <input type="date" id="${page}-end-date" class="form-date p-1 rounded-md text-xs">
+             <button id="apply-custom-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md text-xs">Filtrar</button>
+        </div>
+        <button id="clear-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md ml-auto text-xs">Limpar Filtro</button>
+    </div>`;
+},
         dashboard() {
-            return `
-            <div class="animate-fade-in">
-                <div class="mb-6">
-                    <h1 class="text-3xl font-bold text-white">Painel de Métricas</h1>
-                    <p class="text-gray-400">Visão geral do desempenho de suas operações.</p>
+    return `
+    <div class="animate-fade-in">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-white">Painel de Métricas</h1>
+            <p class="text-gray-400">Visão geral do desempenho de suas operações.</p>
+        </div>
+        ${App.templates.dateFilterComponent('dashboard')} 
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div class="card metric-card"><h3 class="text-sm text-gray-400">Cliques na Página</h3><p id="metric-clicks" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
+            <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Gerados</h3><p id="metric-generated" class="text-4xl font-bold text-yellow-400 mt-2">...</p></div>
+            <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Total</h3><p id="metric-total-revenue" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
+            <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Pagos</h3><p id="metric-paid" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
+            <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Pago</h3><p id="metric-paid-revenue" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
+        </div>
+        <div class="card p-6 rounded-lg mb-8">
+            <h2 class="text-xl font-semibold text-white mb-4">Desempenho de Faturamento</h2>
+            <canvas id="revenueChart" height="100"></canvas>
+        </div>
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div class="card p-6 rounded-lg lg:col-span-2"><h2 class="text-xl font-semibold text-white mb-4">Desempenho por Bot</h2><div id="bots-performance-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Bot</th><th>Cliques</th><th>Vendas</th><th>Faturamento</th></tr></thead><tbody id="bots-performance-table"><tr><td colspan="4" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
+            <div class="card p-6 rounded-lg"><h2 class="text-xl font-semibold text-white mb-4">Tráfego por Estado</h2><div id="traffic-by-state-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Estado</th><th>Cliques</th></tr></thead><tbody id="traffic-by-state-table"><tr><td colspan="2" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
+        </div>
+         <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 mt-8">
+            <div class="card p-6 rounded-lg lg:col-span-2">
+                 <h2 class="text-xl font-semibold text-white mb-4">Minhas Conquistas</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="achievements-list">
+                    <p class="text-gray-500 text-sm">Carregando conquistas...</p>
                 </div>
-                ${this.dateFilterComponent('dashboard')}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                    <div class="card metric-card"><h3 class="text-sm text-gray-400">Cliques na Página</h3><p id="metric-clicks" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
-                    <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Gerados</h3><p id="metric-generated" class="text-4xl font-bold text-yellow-400 mt-2">...</p></div>
-                    <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Total</h3><p id="metric-total-revenue" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
-                    <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Pagos</h3><p id="metric-paid" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
-                    <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Pago</h3><p id="metric-paid-revenue" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
+            </div>
+             <div class="card p-6 rounded-lg">
+                <h2 class="text-xl font-semibold text-white mb-4">Ranking de Vendas</h2>
+                <div id="ranking-list" class="space-y-2">
+                    <p class="text-gray-500 text-sm">Carregando ranking...</p>
                 </div>
-                <div class="card p-6 rounded-lg mb-8">
-                    <h2 class="text-xl font-semibold text-white mb-4">Desempenho de Faturamento</h2>
-                    <canvas id="revenueChart" height="100"></canvas>
-                </div>
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                    <div class="card p-6 rounded-lg lg:col-span-2"><h2 class="text-xl font-semibold text-white mb-4">Desempenho por Bot</h2><div id="bots-performance-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Bot</th><th>Cliques</th><th>Vendas</th><th>Faturamento</th></tr></thead><tbody id="bots-performance-table"><tr><td colspan="4" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
-                    <div class="card p-6 rounded-lg"><h2 class="text-xl font-semibold text-white mb-4">Tráfego por Estado</h2><div id="traffic-by-state-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Estado</th><th>Cliques</th></tr></thead><tbody id="traffic-by-state-table"><tr><td colspan="2" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
-                </div>
-                 <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 mt-8">
-                    <div class="card p-6 rounded-lg lg:col-span-2">
-                         <h2 class="text-xl font-semibold text-white mb-4">Minhas Conquistas</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="achievements-list">
-                            <p class="text-gray-500 text-sm">Carregando conquistas...</p>
-                        </div>
-                    </div>
-                     <div class="card p-6 rounded-lg">
-                        <h2 class="text-xl font-semibold text-white mb-4">Ranking de Vendas</h2>
-                        <div id="ranking-list" class="space-y-2">
-                            <p class="text-gray-500 text-sm">Carregando ranking...</p>
-                        </div>
-                        <p id="user-rank-status" class="mt-4 text-center text-sm font-medium text-indigo-400"></p>
-                    </div>
-                </div>
-            </div>`;
-        },
+                <p id="user-rank-status" class="mt-4 text-center text-sm font-medium text-indigo-400"></p>
+            </div>
+        </div>
+    </div>`;
+},
         pixels() {
-            const pixelListHTML = this.state.data.pixels.map(p => `<div class="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center"><span class="font-mono text-sm">${p.account_name}</span><button data-id="${p.id}" class="delete-pixel-btn btn btn-red text-xs py-1 px-2">Excluir</button></div>`).join('');
+            const pixelListHTML =  App.state.data.pixels.map(p => `<div class="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center"><span class="font-mono text-sm">${p.account_name}</span><button data-id="${p.id}" class="delete-pixel-btn btn btn-red text-xs py-1 px-2">Excluir</button></div>`).join('');
             return `
             <div class="animate-fade-in">
                 <div class="mb-6"><h1 class="text-3xl font-bold text-white">Gerenciar Pixels</h1><p class="text-gray-400">Adicione e gerencie seus pixels do Facebook.</p></div>
@@ -384,7 +461,7 @@ async init() {
             </div>`;
         },
         bots() {
-             const botListHTML = this.state.data.bots.map(b => `
+             const botListHTML = App.state.data.bots.map(b => `
                 <div class="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center">
                     <div>
                         <span class="text-sm font-medium">${b.bot_name}</span>
@@ -408,7 +485,7 @@ async init() {
             </div>`;
         },
         dispatches() {
-            const { dispatches } = this.state.data;
+            const { dispatches } = App.state.data;
             const totalSuccess = dispatches.reduce((acc, d) => acc + (d.success_count || 0), 0);
             const totalFailure = dispatches.reduce((acc, d) => acc + (d.failure_count || 0), 0);
             const totalSent = totalSuccess + totalFailure;
@@ -506,7 +583,7 @@ async init() {
             </div>`;
         },
         pressels() {
-            const { pixels, bots, pressels } = this.state.data;
+            const { pixels, bots, pressels } = App.state.data;
             const botOptions = bots.map(b => `<option value="${b.id}">${b.bot_name}</option>`).join('');
             const pixelCheckboxes = pixels.map(p => `<label class="flex items-center space-x-2 text-gray-300 hover:text-white cursor-pointer p-2 rounded-md hover:bg-gray-700/50"><input type="checkbox" name="pixel_ids" value="${p.id}" class="h-4 w-4 bg-gray-700 border-gray-500 rounded text-indigo-500 focus:ring-indigo-500"><span>${p.account_name}</span></label>`).join('');
             const presselList = pressels.map(pr => `<div class="p-3 card flex justify-between items-center text-sm"><div><p class="font-semibold">${pr.name}</p><p class="text-xs text-gray-400">Bot: ${pr.bot_name}</p></div><div class="space-x-2"><button data-id="${pr.id}" class="generate-pressel-code-btn btn text-xs py-1 px-2">Ver Código</button><button data-id="${pr.id}" class="delete-pressel-btn btn btn-red text-xs py-1 px-2">Excluir</button></div></div>`).join('');
@@ -523,7 +600,7 @@ async init() {
             </div>`;
         },
         checkouts() {
-            const { pixels, checkouts } = this.state.data;
+            const { pixels, checkouts } = App.state.data;
             const pixelCheckboxes = pixels.map(p => `<label class="flex items-center space-x-2 text-gray-300 hover:text-white cursor-pointer p-2 rounded-md hover:bg-gray-700/50"><input type="checkbox" name="pixel_ids" value="${p.id}" class="h-4 w-4 bg-gray-700 border-gray-500 rounded text-indigo-500 focus:ring-indigo-500"><span>${p.account_name}</span></label>`).join('');
             const checkoutList = checkouts.map(c => `
                 <div class="p-3 card flex justify-between items-center text-sm">
@@ -559,7 +636,7 @@ async init() {
             </div>`;
         },
         settings() {
-            const { settings } = this.state.data;
+            const { settings } = App.state.data;
             const providers = [
                 { value: 'pushinpay', text: 'PushinPay (PIX)' },
                 { value: 'stripe', text: 'Stripe (Cartão)' },
@@ -637,10 +714,10 @@ async init() {
             </div>`;
         },
         integrations() {
-            const { settings } = this.state.data;
+            const { settings } = App.state.data;
             return `
             <div class="animate-fade-in">
-                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Integrações</h1><p class="text-gray-400">Conecte o Tracker a outras ferramentas.</p></div>
+                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Integrações</h1><p class="text-gray-400">Conecte o HTracker a outras ferramentas.</p></div>
                 <div class="max-w-2xl">
                     <form id="utmifySettingsForm" class="space-y-8">
                          <div class="card p-6 rounded-lg">
@@ -655,22 +732,25 @@ async init() {
             </div>`;
         },
         documentation() {
-            return `
-            <div class="animate-fade-in">
-                <div class="mb-6"><h1 class="text-3xl font-bold text-white">Credenciais da API</h1><p class="text-gray-400">Sua chave de API para integrações externas.</p></div>
-                <div class="grid grid-cols-1 gap-8 max-w-2xl">
-                    <div class="card p-6 rounded-lg">
-                        <h2 class="text-xl font-semibold mb-4 text-white">Sua Chave de API Tracker</h2>
-                        <p class="text-sm text-gray-400 mb-4">Use esta chave para autenticar suas requisições na API Tracker (ex: gerar PIX, consultar status).</p>
-                        <div class="flex items-center gap-2">
-                            <input id="tracker-api-key" type="password" readonly value="${this.state.data.settings.apiKey || ''}" class="form-input flex-grow p-2">
-                            <button type="button" class="toggle-visibility-btn p-2 text-gray-400 hover:text-white" data-target="#tracker-api-key"><svg class="pointer-events-none h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg></button>
-                            <button type="button" class="copy-btn btn text-sm py-2 px-3" data-target="#tracker-api-key">Copiar</button>
-                        </div>
-                    </div>
+    return `
+    <div class="animate-fade-in">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-text-primary">Credenciais da API</h1>
+            <p class="text-text-secondary mt-1">Sua chave de API para integrações externas.</p>
+        </div>
+        <div class="grid grid-cols-1 gap-8 max-w-2xl">
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-2 text-text-primary">Sua Chave de API Tracker</h2>
+                <p class="text-sm text-text-secondary mb-4">Use esta chave para autenticar suas requisições na API Tracker (ex: gerar PIX, consultar status).</p>
+                <div class="flex items-center gap-2">
+                    <input id="tracker-api-key" type="password" readonly value="${App.state.data.settings.apiKey || ''}" class="form-input flex-grow">
+                    <button type="button" class="toggle-visibility-btn p-2 text-text-secondary hover:text-text-primary" data-target="#tracker-api-key"><svg class="pointer-events-none h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg></button>
+                    <button type="button" class="copy-btn btn text-sm py-2 px-3">Copiar</button>
                 </div>
-            </div>`;
-        },
+            </div>
+        </div>
+    </div>`;
+},
         modal(title, content) {
             return `<div id="modal" class="modal active"><div class="card p-6 rounded-lg w-full max-w-4xl animate-fade-in"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-white">${title}</h2><button id="closeModalBtn" class="text-gray-400 hover:text-white text-3xl">&times;</button></div>${content}</div></div>`;
         }
@@ -702,140 +782,165 @@ async init() {
         });
     },
 
-    addDashboardEventListeners() {
-        document.addEventListener('click', async (e) => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            if (sidebar && overlay) {
-                const isOpenBtn = e.target.closest('#open-sidebar-btn');
-                const isCloseBtn = e.target.closest('#close-sidebar-btn');
-                const isOverlay = e.target.id === 'sidebar-overlay';
-                const isNavLink = e.target.closest('.nav-link');
-                if (isOpenBtn) {
-                    sidebar.classList.remove('-translate-x-full');
-                    overlay.classList.remove('hidden');
-                } else if (isCloseBtn || isOverlay || (isNavLink && window.innerWidth < 768)) {
-                    sidebar.classList.add('-translate-x-full');
-                    overlay.classList.add('hidden');
-                }
-            }
-            if (e.target.closest('#logoutButton')) this.logout();
-            if (e.target.closest('#closeModalBtn')) document.getElementById('modal-container').innerHTML = '';
+addDashboardEventListeners() {
+    const openMobileMenu = () => {
+        const menu = document.getElementById('mobile-menu');
+        const overlay = document.getElementById('mobile-menu-overlay');
+        if (menu && overlay) {
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                menu.classList.remove('translate-x-full');
+                overlay.classList.remove('opacity-0');
+            }, 10);
+        }
+    };
 
-            const sidebarLink = e.target.closest('.nav-link');
-            if (sidebarLink && sidebarLink.dataset.target) this.navigateTo(sidebarLink.dataset.target);
+    const closeMobileMenu = () => {
+        const menu = document.getElementById('mobile-menu');
+        const overlay = document.getElementById('mobile-menu-overlay');
+        if (menu && overlay) {
+            menu.classList.add('translate-x-full');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+    };
 
-            const copyBtn = e.target.closest('.copy-btn');
-            if (copyBtn) {
-                const targetInput = document.querySelector(copyBtn.dataset.target);
-                if(targetInput) {
-                    navigator.clipboard.writeText(targetInput.value || targetInput.textContent).then(() => {
-                        const originalText = copyBtn.textContent;
-                        copyBtn.textContent = 'Copiado!';
-                        setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
-                    });
-                }
+    document.addEventListener('click', async (e) => {
+        // 1. Lógica de Navegação (funciona para mobile e desktop)
+        const navLink = e.target.closest('.nav-link[data-target]');
+        if (navLink) {
+            this.navigateTo(navLink.dataset.target);
+            // Se o clique foi no menu mobile, fecha o menu
+            if (navLink.closest('#mobile-menu')) {
+                closeMobileMenu();
             }
+        }
+        
+        // 2. Lógica para Abrir/Fechar Menu Mobile
+        if (e.target.closest('#open-mobile-menu-btn')) openMobileMenu();
+        if (e.target.closest('#close-mobile-menu-btn') || e.target.closest('#mobile-menu-overlay')) closeMobileMenu();
+        
+        // 3. Lógica de Logout
+        if (e.target.closest('#logoutButton') || e.target.closest('#logoutButtonMobile')) this.logout();
+        
+        // 4. Lógica de Fechar Modal
+        if (e.target.closest('#closeModalBtn')) document.getElementById('modal-container').innerHTML = '';
+        
+        // --- ADICIONADO DE VOLTA A LÓGICA DO "VER CÓDIGO" ---
+        const presselBtn = e.target.closest('.generate-pressel-code-btn');
+        if (presselBtn) {
+            const presselId = presselBtn.dataset.id;
+            const pressel = this.state.data.pressels.find(p => p.id == presselId);
+            if (pressel) this.generatePresselCode(pressel);
+        }
+        
+        const checkoutBtn = e.target.closest('.generate-checkout-code-btn');
+        if (checkoutBtn) {
+            const checkoutId = checkoutBtn.dataset.id;
+            this.generateCheckoutHTML(checkoutId);
+        }
+        // --- FIM DA CORREÇÃO ---
+        
+        const copyBtn = e.target.closest('.copy-btn');
+        if (copyBtn) {
+             const targetInput = document.querySelector(copyBtn.dataset.target);
+            if(targetInput) {
+                navigator.clipboard.writeText(targetInput.value || targetInput.textContent).then(() => {
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'Copiado!';
+                    setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+                });
+            }
+        }
 
-            const toggleBtn = e.target.closest('.toggle-visibility-btn');
-            if (toggleBtn) {
-                const targetInput = document.querySelector(toggleBtn.dataset.target);
-                const isPassword = targetInput.type === 'password';
-                targetInput.type = isPassword ? 'text' : 'password';
-                toggleBtn.innerHTML = isPassword
-                     ? `<svg class="pointer-events-none h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781z" clip-rule="evenodd" /><path d="M12.454 16.697L9.75 13.992a2.5 2.5 0 01-3.482-3.482l-2.455-2.455a10.048 10.048 0 00-3.263 5.218C1.732 14.057 5.522 17 10 17a9.95 9.95 0 005.023-1.303l-2.57-2.57z" /></svg>`
-                     : `<svg class="pointer-events-none h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>`;
-            }
+        const toggleBtn = e.target.closest('.toggle-visibility-btn');
+        if (toggleBtn) {
+            const targetInput = document.querySelector(toggleBtn.dataset.target);
+            const isPassword = targetInput.type === 'password';
+            targetInput.type = isPassword ? 'text' : 'password';
+            toggleBtn.innerHTML = isPassword
+                 ? `<svg class="pointer-events-none h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781z" clip-rule="evenodd" /><path d="M12.454 16.697L9.75 13.992a2.5 2.5 0 01-3.482-3.482l-2.455-2.455a10.048 10.048 0 00-3.263 5.218C1.732 14.057 5.522 17 10 17a9.95 9.95 0 005.023-1.303l-2.57-2.57z" /></svg>`
+                 : `<svg class="pointer-events-none h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>`;
+        }
 
-            const presselBtn = e.target.closest('.generate-pressel-code-btn');
-            if (presselBtn) {
-                const presselId = presselBtn.dataset.id;
-                const pressel = this.state.data.pressels.find(p => p.id == presselId);
-                if (pressel) this.generatePresselCode(pressel);
+        const botBtn = e.target.closest('.test-bot-btn');
+        if (botBtn) {
+            const botId = botBtn.dataset.id;
+            this.testBotConnection(botId, botBtn);
+        }
+
+        const dispatchModalBtn = e.target.closest('#show-dispatch-modal-btn');
+        if(dispatchModalBtn) this.showDispatchModal();
+
+        const massMessageBtn = e.target.closest('#send-mass-message-btn');
+        if (massMessageBtn) {
+            e.preventDefault();
+            if (confirm(`Tem certeza que deseja iniciar este disparo?`)) {
+                this.sendMassMessage(massMessageBtn);
             }
+        }
+        
+        const dispatchDetailsBtn = e.target.closest('.view-dispatch-details-btn');
+        if (dispatchDetailsBtn) {
+            const logId = dispatchDetailsBtn.dataset.logId;
+            this.viewDispatchDetails(logId);
+        }
+        
+        const testPixBtn = e.target.closest('.test-pix-btn');
+        if (testPixBtn) {
+            const provider = testPixBtn.dataset.provider;
+            this.testIndividualPixConnection(provider, testPixBtn);
+        }
+
+        const testPriorityBtn = e.target.closest('#testPriorityRouteBtn');
+        if (testPriorityBtn) this.testPriorityRoute(testPriorityBtn);
+        
+        const tabButton = e.target.closest('.tab-button');
+        if (tabButton) {
+            const tabName = tabButton.dataset.tab;
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            tabButton.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        const deleteBtn = e.target.closest('.delete-pixel-btn, .delete-bot-btn, .delete-pressel-btn, .delete-checkout-btn');
+        if(deleteBtn) {
+            const id = deleteBtn.dataset.id;
+            let type = '', endpoint = '';
+            if (deleteBtn.classList.contains('delete-pixel-btn')) { type = 'pixels'; endpoint = 'pixels'; }
+            if (deleteBtn.classList.contains('delete-bot-btn')) { type = 'bots'; endpoint = 'bots'; }
+            if (deleteBtn.classList.contains('delete-pressel-btn')) { type = 'pressels'; endpoint = 'pressels'; }
+            if (deleteBtn.classList.contains('delete-checkout-btn')) { type = 'checkouts'; endpoint = 'checkouts'; }
             
-            const checkoutBtn = e.target.closest('.generate-checkout-code-btn');
-            if (checkoutBtn) {
-                const checkoutId = checkoutBtn.dataset.id;
-                this.generateCheckoutHTML(checkoutId);
+            if (confirm(`Tem certeza que deseja excluir este item?`)) {
+                try {
+                    await this.apiRequest(`/api/${endpoint}/${id}`, 'DELETE');
+                    this.state.data[type] = this.state.data[type].filter(item => item.id != id);
+                    this.navigateTo(this.state.currentPage);
+                    this.showToast('Item excluído com sucesso!', 'success');
+                } catch(err) {}
             }
+        }
 
-            const botBtn = e.target.closest('.test-bot-btn');
-            if (botBtn) {
-                const botId = botBtn.dataset.id;
-                this.testBotConnection(botId, botBtn);
-            }
+        const filterContainer = e.target.closest('#transactions-date-filter, #dashboard-date-filter');
+        if (filterContainer) {
+            const page = filterContainer.id.split('-')[0];
+            const button = e.target.closest('button[data-period]');
+            const customFilterBtn = e.target.closest(`#apply-custom-date-filter-${page}`);
+            const clearFilterBtn = e.target.closest(`#clear-date-filter-${page}`);
 
-            const dispatchModalBtn = e.target.closest('#show-dispatch-modal-btn');
-            if(dispatchModalBtn) this.showDispatchModal();
-
-            const massMessageBtn = e.target.closest('#send-mass-message-btn');
-            if (massMessageBtn) {
-                e.preventDefault();
-                if (confirm(`Tem certeza que deseja iniciar este disparo?`)) {
-                    this.sendMassMessage(massMessageBtn);
-                }
-            }
-            
-            const dispatchDetailsBtn = e.target.closest('.view-dispatch-details-btn');
-            if (dispatchDetailsBtn) {
-                const logId = dispatchDetailsBtn.dataset.logId;
-                this.viewDispatchDetails(logId);
-            }
-            
-            const testPixBtn = e.target.closest('.test-pix-btn');
-            if (testPixBtn) {
-                const provider = testPixBtn.dataset.provider;
-                this.testIndividualPixConnection(provider, testPixBtn);
-            }
-
-            const testPriorityBtn = e.target.closest('#testPriorityRouteBtn');
-            if (testPriorityBtn) this.testPriorityRoute(testPriorityBtn);
-            
-            const tabButton = e.target.closest('.tab-button');
-            if (tabButton) {
-                const tabName = tabButton.dataset.tab;
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                tabButton.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-                document.getElementById(`tab-${tabName}`).classList.add('active');
-            }
-
-            const deleteBtn = e.target.closest('.delete-pixel-btn, .delete-bot-btn, .delete-pressel-btn, .delete-checkout-btn');
-            if(deleteBtn) {
-                const id = deleteBtn.dataset.id;
-                let type = '', endpoint = '';
-                if (deleteBtn.classList.contains('delete-pixel-btn')) { type = 'pixels'; endpoint = 'pixels'; }
-                if (deleteBtn.classList.contains('delete-bot-btn')) { type = 'bots'; endpoint = 'bots'; }
-                if (deleteBtn.classList.contains('delete-pressel-btn')) { type = 'pressels'; endpoint = 'pressels'; }
-                if (deleteBtn.classList.contains('delete-checkout-btn')) { type = 'checkouts'; endpoint = 'checkouts'; }
-                
-                if (confirm(`Tem certeza que deseja excluir este item?`)) {
-                    try {
-                        await this.apiRequest(`/api/${endpoint}/${id}`, 'DELETE');
-                        this.state.data[type] = this.state.data[type].filter(item => item.id != id);
-                        this.navigateTo(this.state.currentPage);
-                        this.showToast('Item excluído com sucesso!', 'success');
-                    } catch(err) {}
-                }
-            }
-
-            const filterContainer = e.target.closest('#transactions-date-filter, #dashboard-date-filter');
-            if (filterContainer) {
-                const page = filterContainer.id.split('-')[0];
-                const button = e.target.closest('button[data-period]');
-                const customFilterBtn = e.target.closest(`#apply-custom-date-filter-${page}`);
-                const clearFilterBtn = e.target.closest(`#clear-date-filter-${page}`);
-
-                if (button) { this.handleFilterChange(page, button.dataset.period); }
-                else if (customFilterBtn) {
-                    const startDate = document.getElementById(`${page}-start-date`).value;
-                    const endDate = document.getElementById(`${page}-end-date`).value;
-                    if (startDate && endDate) { this.handleFilterChange(page, 'custom', startDate, endDate); }
-                    else { this.showToast('Por favor, selecione data de início e fim.', 'error'); }
-                } else if (clearFilterBtn) { this.handleFilterChange(page, 'all'); }
-            }
-        });
+            if (button) { this.handleFilterChange(page, button.dataset.period); }
+            else if (customFilterBtn) {
+                const startDate = document.getElementById(`${page}-start-date`).value;
+                const endDate = document.getElementById(`${page}-end-date`).value;
+                if (startDate && endDate) { this.handleFilterChange(page, 'custom', startDate, endDate); }
+                else { this.showToast('Por favor, selecione data de início e fim.', 'error'); }
+            } else if (clearFilterBtn) { this.handleFilterChange(page, 'all'); }
+        }
+    });
 
         document.addEventListener('submit', async (e) => {
             const form = e.target.closest('form');
@@ -1037,31 +1142,26 @@ async init() {
 // Substitua a função de simulação por esta:
 async fetchDashboardMetrics() {
     try {
-        // Adicionamos os filtros de data à URL se eles existirem
         const { startDate, endDate } = this.state.dateFilter;
-        const query = new URLSearchParams({
-            startDate: startDate || '',
-            endDate: endDate || ''
-        }).toString();
+        const queryParams = new URLSearchParams();
+        if (startDate) queryParams.append('startDate', startDate);
+        if (endDate) queryParams.append('endDate', endDate);
         
-        const metrics = await this.apiRequest(`/api/dashboard/metrics?${query}`);
+        const metrics = await this.apiRequest(`/api/dashboard/metrics?${queryParams.toString()}`);
         
         document.getElementById('metric-clicks').textContent = metrics.total_clicks || '0';
         document.getElementById('metric-generated').textContent = metrics.total_pix_generated || '0';
         document.getElementById('metric-paid').textContent = metrics.total_pix_paid || '0';
         document.getElementById('metric-total-revenue').textContent = `R$ ${(metrics.total_revenue || 0).toFixed(2).replace('.', ',')}`;
         document.getElementById('metric-paid-revenue').textContent = `R$ ${(metrics.paid_revenue || 0).toFixed(2).replace('.', ',')}`;
-
-        // Limpa as tabelas de simulação
-        const botsTableBody = document.getElementById('bots-performance-table');
-        if (botsTableBody) botsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Dados de performance por bot ainda não implementados.</td></tr>';
         
-        const trafficTableBody = document.getElementById('traffic-by-state-table');
-        if (trafficTableBody) trafficTableBody.innerHTML = '<tr><td colspan="2" class="text-center text-gray-500 py-4">Dados de tráfego por estado ainda não implementados.</td></tr>';
+        // As outras métricas ainda serão desenvolvidas
+        document.getElementById('bots-performance-table').innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Em breve...</td></tr>';
+        document.getElementById('traffic-by-state-table').innerHTML = '<tr><td colspan="2" class="text-center text-gray-500 py-4">Em breve...</td></tr>';
 
     } catch (error) {
         console.error("Erro ao carregar métricas do painel:", error);
-        this.showToast('Não foi possível carregar as métricas do painel.', 'error');
+        this.showToast('Não foi possível carregar as métricas.', 'error');
     }
 },
 
