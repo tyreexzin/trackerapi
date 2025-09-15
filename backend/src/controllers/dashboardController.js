@@ -12,31 +12,20 @@ exports.getInitialData = async (req, res) => {
             include: {
                 pixels: true,
                 bots: true,
-                pressels: {
-                    include: {
-                        bot: { select: { bot_name: true } },
-                        pixels: { select: { id: true } }
-                    }
-                },
-                checkouts: {
-                    include: {
-                        pixels: { select: { id: true } }
-                    }
-                },
+                pressels: { include: { bot: { select: { bot_name: true } }, pixels: { select: { id: true } } } },
+                checkouts: { include: { pixels: { select: { id: true } } } },
                 settings: true,
             }
         });
         if (!seller) return res.status(404).json({ message: "Vendedor não encontrado." });
 
-        // Formata os dados para o front-end
         const formattedCheckouts = seller.checkouts.map(checkout => ({ ...checkout, pixel_ids: checkout.pixels.map(p => p.id) }));
         const formattedPressels = seller.pressels.map(pressel => ({ ...pressel, pixel_ids: pressel.pixels.map(p => p.id), bot_name: pressel.bot.bot_name }));
 
-        // A CORREÇÃO PRINCIPAL ESTÁ AQUI:
-        // Juntamos as configurações do banco com a apiKey do vendedor
+        // A PARTE MAIS IMPORTANTE ESTÁ AQUI:
         const finalSettings = {
             ...seller.settings,
-            apiKey: seller.apiKey
+            apiKey: seller.apiKey // Garante que a apiKey do vendedor seja incluída
         };
 
         res.status(200).json({
@@ -44,7 +33,7 @@ exports.getInitialData = async (req, res) => {
             bots: seller.bots,
             pressels: formattedPressels,
             checkouts: formattedCheckouts,
-            settings: finalSettings // Agora as configurações incluem a apiKey
+            settings: finalSettings
         });
     } catch (error) {
         res.status(500).json({ message: 'Erro ao buscar dados.', error: error.message });
