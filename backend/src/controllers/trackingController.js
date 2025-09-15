@@ -3,21 +3,42 @@ const prisma = new PrismaClient();
 
 exports.registerClick = async (req, res) => {
     const { seller } = req; // Vem do apiKeyMiddleware
-    const { checkoutId, presselId, ...trackingData } = req.body;
+    const {
+        checkoutId,
+        presselId,
+        referer,
+        fbclid,
+        fbp,
+        fbc,
+        user_agent,
+        utm_source,
+        utm_campaign,
+        utm_medium,
+        utm_content,
+        utm_term
+    } = req.body;
 
     try {
         const clickData = {
-            ...trackingData,
             sellerId: seller.id,
             checkoutId,
             presselId,
+            referer,
+            fbclid,
+            fbp,
+            fbc,
+            user_agent,
+            utm_source,
+            utm_campaign,
+            utm_medium,
+            utm_content,
+            utm_term
         };
 
         Object.keys(clickData).forEach(key => (clickData[key] === undefined || clickData[key] === null) && delete clickData[key]);
 
         const newClick = await prisma.click.create({ data: clickData });
 
-        // CORREÇÃO: Enviando a resposta no formato esperado pelo seu script
         res.status(201).json({ status: "success", click_id: newClick.id });
 
     } catch (error) {
