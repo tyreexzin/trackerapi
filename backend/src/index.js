@@ -1,5 +1,3 @@
-// backend/src/index.js
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -18,7 +16,6 @@ const trackingRoutes = require('./routes/trackingRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
-const internalRoutes = require('./routes/internalRoutes');
 
 const app = express();
 
@@ -41,7 +38,6 @@ app.use('/api', presselRoutes);
 app.use('/api', trackingRoutes);
 app.use('/api', paymentRoutes);
 app.use('/api', settingsRoutes);
-app.use('/api', internalRoutes);
 
 // A rota de webhook continua separada
 app.use('/webhooks', webhookRoutes);
