@@ -2,7 +2,6 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 module.exports = async (req, res, next) => {
-    // Procura a chave no header OU no corpo da requisição
     const apiKey = req.headers['x-api-key'] || req.body.sellerApiKey;
 
     if (!apiKey) {

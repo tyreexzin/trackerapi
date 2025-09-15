@@ -1167,18 +1167,12 @@ async fetchDashboardMetrics() {
     
             generatePresselCode(pressel) {
             const { settings, pixels } = this.state.data;
-
-            // 1. Filtra os pixels corretos para esta pressel
             const selectedPixels = pixels.filter(p => pressel.pixel_ids.includes(p.id));
-
-            // 2. Formata o array de pixels como o sistema antigo esperava
             const pixelsToTrackJSON = JSON.stringify(
                 selectedPixels.map(p => ({ id: p.pixel_id })),
                 null,
                 2
             );
-
-            // 3. Monta o HTML final usando o template do sistema antigo
             const htmlContent = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1188,7 +1182,7 @@ async fetchDashboardMetrics() {
     <script>
         const API_BASE_URL = '${this.state.API_BASE_URL}';
         const SELLER_API_KEY = '${settings.api_key}';
-        const PRESSEL_ID = '${pressel.id}'';
+        const PRESSEL_ID = '${pressel.id}';
         const TELEGRAM_USERNAME = '${pressel.bot_name}';
         const WHITE_PAGE_URL = '${pressel.white_page_url || 'https://google.com'}';
         const PIXELS_TO_TRACK = ${pixelsToTrackJSON};

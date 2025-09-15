@@ -1,9 +1,6 @@
-// backend/src/controllers/dashboardController.js
-
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// A função getInitialData que busca os dados iniciais continua a mesma
 exports.getInitialData = async (req, res) => {
     const { sellerId } = req;
     try {
@@ -22,7 +19,6 @@ exports.getInitialData = async (req, res) => {
         const formattedCheckouts = seller.checkouts.map(checkout => ({ ...checkout, pixel_ids: checkout.pixels.map(p => p.id) }));
         const formattedPressels = seller.pressels.map(pressel => ({ ...pressel, pixel_ids: pressel.pixels.map(p => p.id), bot_name: pressel.bot.bot_name }));
 
-        // A linha mais importante:
         const finalSettings = {
             ...seller.settings,
             apiKey: seller.apiKey,
