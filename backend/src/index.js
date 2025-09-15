@@ -19,6 +19,25 @@ const webhookRoutes = require('./routes/webhookRoutes');
 
 const app = express();
 
+[
+  ['authRoutes', authRoutes],
+  ['dashboardRoutes', dashboardRoutes],
+  ['transactionRoutes', transactionRoutes],
+  ['dispatchRoutes', dispatchRoutes],
+  ['pixelRoutes', pixelRoutes],
+  ['botRoutes', botRoutes],
+  ['checkoutRoutes', checkoutRoutes],
+  ['presselRoutes', presselRoutes],
+  ['trackingRoutes', trackingRoutes],
+  ['paymentRoutes', paymentRoutes],
+  ['settingsRoutes', settingsRoutes],
+  ['webhookRoutes', webhookRoutes],
+].forEach(([name, route]) => {
+  if (typeof route !== 'function') {
+    console.error(`❗ ${name} NÃO exporta um router válido:`, route);
+  }
+});
+
 // --- CONFIGURAÇÃO DE CORS (A CORREÇÃO ESTÁ AQUI) ---
 // Isso permite que QUALQUER site acesse sua API.
 // Para produção, você poderia restringir para domínios específicos.
