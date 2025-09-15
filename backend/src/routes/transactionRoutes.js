@@ -2,9 +2,8 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// Rota para buscar transações (protegida por login)
 router.get('/transactions', authMiddleware, (req, res) => {
-    // Por enquanto, apenas retorna uma lista vazia
+    // Garante que a resposta seja 200 OK com um array vazio como JSON
     res.status(200).json([]);
 });
 

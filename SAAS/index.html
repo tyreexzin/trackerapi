@@ -188,26 +188,38 @@
             dispatchesChart: null,
         },
 
-        async init() {
-            this.state.token = localStorage.getItem('tracker_token');
-            if (this.state.token) {
-                try {
-                    const [staticData, transactions, dispatches] = await Promise.all([
-                        this.apiRequest('/api/dashboard/data'),
-                        this.apiRequest('/api/transactions'),
-                        this.apiRequest('/api/dispatches')
-                    ]);
-                    this.state.data = { ...this.state.data, ...staticData, transactions: transactions || [], dispatches: dispatches || [] };
-                    this.renderLayout();
-                    this.navigateTo('dashboard');
-                } catch (e) {
-                    this.logout();
-                }
-            } else {
-                this.renderLogin();
-                this.addAuthEventListeners();
-            }
-        },
+async init() {
+    console.log("App.init(): Iniciando aplicação...");
+    this.state.token = localStorage.getItem('tracker_token');
+
+    if (this.state.token) {
+        console.log("App.init(): Token encontrado. Tentando buscar dados...");
+        try {
+            const results = await Promise.all([
+                this.apiRequest('/api/dashboard/data'),
+                this.apiRequest('/api/transactions'),
+                this.apiRequest('/api/dispatches')
+            ]);
+            console.log("App.init(): Dados buscados com sucesso.", results);
+
+            const [staticData, transactions, dispatches] = results;
+            this.state.data = { ...this.state.data, ...staticData, transactions: transactions || [], dispatches: dispatches || [] };
+            
+            console.log("App.init(): Renderizando layout principal...");
+            this.renderLayout();
+            console.log("App.init(): Layout renderizado. Navegando para o dashboard...");
+            this.navigateTo('dashboard');
+
+        } catch (e) {
+            console.error("App.init(): Erro ao buscar dados. Deslogando...", e);
+            this.logout();
+        }
+    } else {
+        console.log("App.init(): Nenhum token encontrado. Renderizando página de login.");
+        this.renderLogin();
+        this.addAuthEventListeners();
+    }
+},
 
         renderLogin(page = 'login') {
             document.getElementById('app').innerHTML = this.templates.auth(page);
