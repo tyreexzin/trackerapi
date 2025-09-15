@@ -39,6 +39,10 @@ app.use('/api', settingsRoutes);
 // A rota de webhook continua separada
 app.use('/webhooks', webhookRoutes);
 
+app.get('/ping', (req, res) => {
+  res.status(200).json({ message: 'pong' });
+});
+
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
