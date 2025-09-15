@@ -87,6 +87,20 @@
             backdrop-filter: blur(8px);
             border-bottom: 1px solid var(--border-color);
         }
+        .modal { 
+            display: none; /* Começa escondido por padrão */
+            position: fixed; /* Fica fixo na tela, mesmo com scroll */
+            inset: 0; /* Ocupa a tela inteira (top: 0; right: 0; bottom: 0; left: 0;) */
+            z-index: 50; /* Garante que fique na frente de outros elementos */
+            align-items: center; /* Centraliza verticalmente */
+            justify-content: center; /* Centraliza horizontalmente */
+        }
+        .modal.active {
+            display: flex; /* Quando ativo, usa flexbox para centralizar o conteúdo */
+            background-color: rgba(18, 18, 18, 0.8); /* Fundo preto semi-transparente */
+            backdrop-filter: blur(8px); /* Efeito de vidro embaçado no fundo */
+            -webkit-backdrop-filter: blur(8px);
+        }                
         .nav-link {
             color: var(--text-secondary);
             font-weight: 500;
@@ -190,24 +204,24 @@
             text-decoration: underline;
         }
         .mobile-menu-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.6);
-    z-index: 30;
-    transition: opacity 0.3s ease-in-out;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 30;
+            transition: opacity 0.3s ease-in-out;
 }
-.mobile-sidebar {
-    position: fixed;
-    top: 0;
-    right: 0; 
-    bottom: 0;
-    width: 16rem; /* 256px */
-    background-color: var(--bg-secondary); /* Corrigido para a cor do tema */
-    padding: 1rem;
-    z-index: 40;
-    transition: transform 0.3s ease-in-out;
-    border-left: 1px solid var(--border-color); /* Alterado de 'border-right' para 'border-left' */
-}
+        .mobile-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0; 
+            bottom: 0;
+            width: 16rem; /* 256px */
+            background-color: var(--bg-secondary); /* Corrigido para a cor do tema */
+            padding: 1rem;
+            z-index: 40;
+            transition: transform 0.3s ease-in-out;
+            border-left: 1px solid var(--border-color); /* Alterado de 'border-right' para 'border-left' */
+        }
     </style>
 </head>
 <body>
@@ -320,40 +334,40 @@ async init() {
                     <div class="mt-6"><a href="#" id="showLogin">Já possui credenciais? Faça Login</a></div>
                 </div>`;
             },
-    layout() {
-    return `
-    <div class="min-h-screen">
-        <header class="top-nav sticky top-0 z-20">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 flex items-center gap-2">
-                            <span class="text-3xl text-text-primary">🎯</span>
-                            <span class="font-bold text-xl text-text-primary">Tracker</span>
+            layout() {
+            return `
+            <div class="min-h-screen">
+                <header class="top-nav sticky top-0 z-20">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex items-center justify-between h-16">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 flex items-center gap-2">
+                                    <span class="text-3xl text-text-primary">🎯</span>
+                                    <span class="font-bold text-xl text-text-primary">Tracker</span>
+                                </div>
+                                <nav class="hidden md:flex md:ml-10 md:space-x-4">
+                                    <div data-target="dashboard" class="nav-link">Dashboard</div>
+                                    <div data-target="pixels" class="nav-link">Pixels</div>
+                                    <div data-target="bots" class="nav-link">Bots</div>
+                                    <div data-target="checkouts" class="nav-link">Checkouts</div>
+                                    <div data-target="pressels" class="nav-link">Pressels</div>
+                                    <div data-target="transactions" class="nav-link">Transações</div>
+                                </nav>
+                            </div>
+                            <div class="hidden md:flex items-center gap-4">
+                                <div data-target="settings" class="nav-link cursor-pointer">Configurações</div>
+                                <div data-target="documentation" class="nav-link cursor-pointer">Credenciais</div>
+                                <button id="logoutButton" class="text-sm font-medium text-text-secondary hover:text-text-primary">Sair</button>
+                            </div>
+                            <div class="-mr-2 flex md:hidden">
+                                <button id="open-mobile-menu-btn" type="button" class="bg-bg-secondary inline-flex items-center justify-center p-2 rounded-md text-text-secondary hover:text-text-primary focus:outline-none">
+                                    <span class="sr-only">Abrir menu</span>
+                                    <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                                </button>
+                            </div>
                         </div>
-                        <nav class="hidden md:flex md:ml-10 md:space-x-4">
-                            <div data-target="dashboard" class="nav-link">Dashboard</div>
-                            <div data-target="pixels" class="nav-link">Pixels</div>
-                            <div data-target="bots" class="nav-link">Bots</div>
-                            <div data-target="checkouts" class="nav-link">Checkouts</div>
-                            <div data-target="pressels" class="nav-link">Pressels</div>
-                            <div data-target="transactions" class="nav-link">Transações</div>
-                        </nav>
                     </div>
-                    <div class="hidden md:flex items-center gap-4">
-                        <div data-target="settings" class="nav-link cursor-pointer">Configurações</div>
-                        <div data-target="documentation" class="nav-link cursor-pointer">Credenciais</div>
-                        <button id="logoutButton" class="text-sm font-medium text-text-secondary hover:text-text-primary">Sair</button>
-                    </div>
-                    <div class="-mr-2 flex md:hidden">
-                        <button id="open-mobile-menu-btn" type="button" class="bg-bg-secondary inline-flex items-center justify-center p-2 rounded-md text-text-secondary hover:text-text-primary focus:outline-none">
-                            <span class="sr-only">Abrir menu</span>
-                            <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </header>
+                </header>
 
         <div id="mobile-menu-overlay" class="mobile-menu-overlay opacity-0 hidden"></div>
         
@@ -385,66 +399,66 @@ async init() {
         </main>
     </div>`;
 },
-dateFilterComponent(page) {
-    // CORREÇÃO: Usamos App.state em vez de this.state
-    const { period } = App.state.dateFilter; 
-    const btnClasses = "btn-secondary py-1 px-3 rounded-md text-xs";
-    const activeClasses = "active !bg-indigo-500 !border-indigo-400 !text-white";
-    return `
-    <div id="${page}-date-filter" class="card p-3 rounded-lg mb-6 flex flex-wrap items-center gap-2 text-sm">
-        <span class="font-semibold mr-2 text-gray-300">Período:</span>
-        <button data-period="today" class="${btnClasses} ${period === 'today' ? activeClasses : ''}">Hoje</button>
-        <button data-period="yesterday" class="${btnClasses} ${period === 'yesterday' ? activeClasses : ''}">Ontem</button>
-        <button data-period="last7days" class="${btnClasses} ${period === 'last7days' ? activeClasses : ''}">7 Dias</button>
-        <button data-period="thisMonth" class="${btnClasses} ${period === 'thisMonth' ? activeClasses : ''}">Este Mês</button>
-        <div class="flex items-center gap-2 pl-4 border-l border-gray-700 ml-2">
-             <input type="date" id="${page}-start-date" class="form-date p-1 rounded-md text-xs">
-             <span class="text-gray-500">até</span>
-             <input type="date" id="${page}-end-date" class="form-date p-1 rounded-md text-xs">
-             <button id="apply-custom-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md text-xs">Filtrar</button>
-        </div>
-        <button id="clear-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md ml-auto text-xs">Limpar Filtro</button>
-    </div>`;
-},
+            dateFilterComponent(page) {
+                // CORREÇÃO: Usamos App.state em vez de this.state
+                const { period } = App.state.dateFilter; 
+                const btnClasses = "btn-secondary py-1 px-3 rounded-md text-xs";
+                const activeClasses = "active !bg-indigo-500 !border-indigo-400 !text-white";
+                return `
+                <div id="${page}-date-filter" class="card p-3 rounded-lg mb-6 flex flex-wrap items-center gap-2 text-sm">
+                    <span class="font-semibold mr-2 text-gray-300">Período:</span>
+                    <button data-period="today" class="${btnClasses} ${period === 'today' ? activeClasses : ''}">Hoje</button>
+                    <button data-period="yesterday" class="${btnClasses} ${period === 'yesterday' ? activeClasses : ''}">Ontem</button>
+                    <button data-period="last7days" class="${btnClasses} ${period === 'last7days' ? activeClasses : ''}">7 Dias</button>
+                    <button data-period="thisMonth" class="${btnClasses} ${period === 'thisMonth' ? activeClasses : ''}">Este Mês</button>
+                    <div class="flex items-center gap-2 pl-4 border-l border-gray-700 ml-2">
+                        <input type="date" id="${page}-start-date" class="form-date p-1 rounded-md text-xs">
+                        <span class="text-gray-500">até</span>
+                        <input type="date" id="${page}-end-date" class="form-date p-1 rounded-md text-xs">
+                        <button id="apply-custom-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md text-xs">Filtrar</button>
+                    </div>
+                    <button id="clear-date-filter-${page}" class="btn-secondary py-1 px-3 rounded-md ml-auto text-xs">Limpar Filtro</button>
+                </div>`;
+            },
         dashboard() {
-    return `
-    <div class="animate-fade-in">
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold text-white">Painel de Métricas</h1>
-            <p class="text-gray-400">Visão geral do desempenho de suas operações.</p>
-        </div>
-        ${App.templates.dateFilterComponent('dashboard')} 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <div class="card metric-card"><h3 class="text-sm text-gray-400">Cliques na Página</h3><p id="metric-clicks" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
-            <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Gerados</h3><p id="metric-generated" class="text-4xl font-bold text-yellow-400 mt-2">...</p></div>
-            <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Total</h3><p id="metric-total-revenue" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
-            <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Pagos</h3><p id="metric-paid" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
-            <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Pago</h3><p id="metric-paid-revenue" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
-        </div>
-        <div class="card p-6 rounded-lg mb-8">
-            <h2 class="text-xl font-semibold text-white mb-4">Desempenho de Faturamento</h2>
-            <canvas id="revenueChart" height="100"></canvas>
-        </div>
-        <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            <div class="card p-6 rounded-lg lg:col-span-2"><h2 class="text-xl font-semibold text-white mb-4">Desempenho por Bot</h2><div id="bots-performance-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Bot</th><th>Cliques</th><th>Vendas</th><th>Faturamento</th></tr></thead><tbody id="bots-performance-table"><tr><td colspan="4" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
-            <div class="card p-6 rounded-lg"><h2 class="text-xl font-semibold text-white mb-4">Tráfego por Estado</h2><div id="traffic-by-state-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Estado</th><th>Cliques</th></tr></thead><tbody id="traffic-by-state-table"><tr><td colspan="2" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
-        </div>
-         <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 mt-8">
-            <div class="card p-6 rounded-lg lg:col-span-2">
-                 <h2 class="text-xl font-semibold text-white mb-4">Minhas Conquistas</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="achievements-list">
-                    <p class="text-gray-500 text-sm">Carregando conquistas...</p>
+        return `
+        <div class="animate-fade-in">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-white">Painel de Métricas</h1>
+                <p class="text-gray-400">Visão geral do desempenho de suas operações.</p>
+            </div>
+            ${App.templates.dateFilterComponent('dashboard')} 
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                <div class="card metric-card"><h3 class="text-sm text-gray-400">Cliques na Página</h3><p id="metric-clicks" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
+                <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Gerados</h3><p id="metric-generated" class="text-4xl font-bold text-yellow-400 mt-2">...</p></div>
+                <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Total</h3><p id="metric-total-revenue" class="text-4xl font-bold text-indigo-400 mt-2">...</p></div>
+                <div class="card metric-card"><h3 class="text-sm text-gray-400">PIX Pagos</h3><p id="metric-paid" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
+                <div class="card metric-card"><h3 class="text-sm text-gray-400">Faturamento Pago</h3><p id="metric-paid-revenue" class="text-4xl font-bold text-green-400 mt-2">...</p></div>
+            </div>
+            <div class="card p-6 rounded-lg mb-8">
+                <h2 class="text-xl font-semibold text-white mb-4">Desempenho de Faturamento</h2>
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                <div class="card p-6 rounded-lg lg:col-span-2"><h2 class="text-xl font-semibold text-white mb-4">Desempenho por Bot</h2><div id="bots-performance-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Bot</th><th>Cliques</th><th>Vendas</th><th>Faturamento</th></tr></thead><tbody id="bots-performance-table"><tr><td colspan="4" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
+                <div class="card p-6 rounded-lg"><h2 class="text-xl font-semibold text-white mb-4">Tráfego por Estado</h2><div id="traffic-by-state-table-container" class="overflow-x-auto"><table class="table-custom w-full text-sm"><thead><tr><th>Estado</th><th>Cliques</th></tr></thead><tbody id="traffic-by-state-table"><tr><td colspan="2" class="text-center text-gray-500 py-4">Carregando...</td></tr></tbody></table></div></div>
+            </div>
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 mt-8">
+                <div class="card p-6 rounded-lg lg:col-span-2">
+                    <h2 class="text-xl font-semibold text-white mb-4">Minhas Conquistas</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="achievements-list">
+                        <p class="text-gray-500 text-sm">Carregando conquistas...</p>
+                    </div>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold text-white mb-4">Ranking de Vendas</h2>
+                    <div id="ranking-list" class="space-y-2">
+                        <p class="text-gray-500 text-sm">Carregando ranking...</p>
+                    </div>
+                    <p id="user-rank-status" class="mt-4 text-center text-sm font-medium text-indigo-400"></p>
                 </div>
             </div>
-             <div class="card p-6 rounded-lg">
-                <h2 class="text-xl font-semibold text-white mb-4">Ranking de Vendas</h2>
-                <div id="ranking-list" class="space-y-2">
-                    <p class="text-gray-500 text-sm">Carregando ranking...</p>
-                </div>
-                <p id="user-rank-status" class="mt-4 text-center text-sm font-medium text-indigo-400"></p>
-            </div>
-        </div>
-    </div>`;
+        </div>`;
 },
         pixels() {
             const pixelListHTML =  App.state.data.pixels.map(p => `<div class="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center"><span class="font-mono text-sm">${p.account_name}</span><button data-id="${p.id}" class="delete-pixel-btn btn btn-red text-xs py-1 px-2">Excluir</button></div>`).join('');
@@ -1197,32 +1211,24 @@ async fetchDashboardMetrics() {
     
     generatePresselCode(pressel) {
             const { settings, pixels } = this.state.data;
+            if (!settings.apiKey) { return this.showToast('API Key não encontrada. Saia e entre na plataforma novamente.', 'error'); }
 
-            // 1. Filtra os pixels corretos para esta pressel
-            const selectedPixels = pixels.filter(p => pressel.pixel_ids.includes(p.id));
-            
-            // 2. Formata o array de pixels como o sistema antigo esperava
+            const presselPixels = pressel.pixel_ids || [];
+            const selectedPixels = pixels.filter(p => presselPixels.includes(p.id));
             const pixelsToTrackJSON = JSON.stringify(
                 selectedPixels.map(p => ({ id: p.pixel_id })),
                 null,
                 2
             );
 
-            // 3. Monta o HTML final usando o template do sistema antigo
-            const htmlContent = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>VIP</title>
-    <script>
+            const htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Carregando...</title><script>
         const API_BASE_URL = '${this.state.API_BASE_URL}';
-        const SELLER_API_KEY = '${settings.api_key}';
-        const PRESSEL_ID = ${pressel.id};
+        const SELLER_API_KEY = '${settings.apiKey}';
+        const PRESSEL_ID = '${pressel.id}';
         const TELEGRAM_USERNAME = '${pressel.bot_name}';
         const WHITE_PAGE_URL = '${pressel.white_page_url || 'https://google.com'}';
         const PIXELS_TO_TRACK = ${pixelsToTrackJSON};
-        
+
         const isBot = () => /bot|facebook|crawler|spider|preview/i.test(navigator.userAgent);
         const isMobile = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
 
@@ -1237,23 +1243,22 @@ async fetchDashboardMetrics() {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                          sellerApiKey: SELLER_API_KEY,
-                          presselId: PRESSEL_ID,
-                          referer: document.referrer || null,
-                          fbclid: params.get("fbclid") || null,
-                          fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1] || null,
-                          fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1] || null,
-                          user_agent: navigator.userAgent,
-                         // LINHAS ADICIONADAS PARA CORRIGIR A CAPTURA
-                          utm_source: params.get("utm_source"),
-                          utm_campaign: params.get("utm_campaign"),
-                          utm_medium: params.get("utm_medium"),
-                          utm_content: params.get("utm_content"),
-                          utm_term: params.get("utm_term")
+                        sellerApiKey: SELLER_API_KEY,
+                        presselId: PRESSEL_ID,
+                        referer: document.referrer || null,
+                        fbclid: params.get("fbclid") || null,
+                        fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1] || null,
+                        fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1] || null,
+                        user_agent: navigator.userAgent,
+                        utm_source: params.get("utm_source"),
+                        utm_campaign: params.get("utm_campaign"),
+                        utm_medium: params.get("utm_medium"),
+                        utm_content: params.get("utm_content"),
+                        utm_term: params.get("utm_term")
                     })
                 });
                 const data = await response.json();
-                if (response.ok && data.status === "success") {
+                if (response.ok && data.click_id) {
                     window.location.replace(\`https://t.me/\${TELEGRAM_USERNAME}?start=\${data.click_id}\`);
                 } else {
                     window.location.replace(WHITE_PAGE_URL);
@@ -1263,7 +1268,6 @@ async fetchDashboardMetrics() {
             }
         }
         
-        // Adiciona o atraso de 500ms para permitir que o Pixel crie os cookies.
         setTimeout(handleRedirect, 500);
     <\/script>
     <script>
@@ -1271,14 +1275,10 @@ async fetchDashboardMetrics() {
         PIXELS_TO_TRACK.forEach(p => { fbq('init', p.id); });
         fbq('track', 'PageView');
     <\/script>
-    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=\${selectedPixels.length > 0 ? selectedPixels[0].pixel_id : ''}&ev=PageView&noscript=1"/></noscript>
-</head>
-<body><p>Redirecionando...</p></body>
-</html>`;
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=\${selectedPixels.length > 0 ? selectedPixels[0].pixel_id : ''}&ev=PageView&noscript=1"/></noscript></head><body><p>Redirecionando...</p></body></html>`;
 
-            // Mantém a mesma lógica de modal para exibir o código
-            const modalContent = `<p class="text-sm text-gray-400 mb-4">Código gerado com a lógica do sistema antigo. Copie e cole no HTML da sua página.</p><textarea id="pressel-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#pressel-code-textarea">Copiar Código</button>`;
-            
+            const modalContent = `<p class="text-sm text-text-secondary mb-4">Copie o código abaixo e cole no HTML da sua página de pressel.</p><textarea id="pressel-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#pressel-code-textarea">Copiar Código</button>`;
+
             document.getElementById('modal-container').innerHTML = this.templates.modal(`Código da Pressel: ${pressel.name}`, modalContent);
             document.getElementById('pressel-code-textarea').value = htmlContent;
         },

@@ -12,33 +12,39 @@ exports.getInitialData = async (req, res) => {
             include: {
                 pixels: true,
                 bots: true,
-                pressels: { // <-- CORREÇÃO AQUI
-                    include: { 
+                pressels: {
+                    include: {
                         bot: { select: { bot_name: true } },
-                        pixels: { select: { id: true } } // Pede para incluir os pixels da pressel
-                    } 
+                        pixels: { select: { id: true } }
+                    }
                 },
-                checkouts: { 
-                    include: { 
-                        pixels: { select: { id: true } } 
-                    } 
+                checkouts: {
+                    include: {
+                        pixels: { select: { id: true } }
+                    }
                 },
                 settings: true,
             }
         });
         if (!seller) return res.status(404).json({ message: "Vendedor não encontrado." });
 
-        // Formata os checkouts e pressels para o front-end
+        // Formata os dados para o front-end
         const formattedCheckouts = seller.checkouts.map(checkout => ({ ...checkout, pixel_ids: checkout.pixels.map(p => p.id) }));
         const formattedPressels = seller.pressels.map(pressel => ({ ...pressel, pixel_ids: pressel.pixels.map(p => p.id), bot_name: pressel.bot.bot_name }));
-        const finalSettings = { ...seller.settings, apiKey: seller.apiKey };
+
+        // A CORREÇÃO PRINCIPAL ESTÁ AQUI:
+        // Juntamos as configurações do banco com a apiKey do vendedor
+        const finalSettings = {
+            ...seller.settings,
+            apiKey: seller.apiKey
+        };
 
         res.status(200).json({
             pixels: seller.pixels,
             bots: seller.bots,
-            pressels: formattedPressels, // Envia as pressels formatadas
+            pressels: formattedPressels,
             checkouts: formattedCheckouts,
-            settings: finalSettings
+            settings: finalSettings // Agora as configurações incluem a apiKey
         });
     } catch (error) {
         res.status(500).json({ message: 'Erro ao buscar dados.', error: error.message });
