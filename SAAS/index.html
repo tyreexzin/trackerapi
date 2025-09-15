@@ -1211,8 +1211,9 @@ async fetchDashboardMetrics() {
     
     generatePresselCode(pressel) {
             const { settings, pixels } = this.state.data;
-            if (!settings.apiKey) { return this.showToast('API Key não encontrada. Saia e entre na plataforma novamente.', 'error'); }
-            if (!pressel) { return this.showToast('Dados da pressel não encontrados.', 'error'); }
+            if (!settings || !settings.apiKey) {
+                return this.showToast('API Key não encontrada. Por favor, saia e entre novamente.', 'error');
+            }
 
             const presselPixels = pressel.pixel_ids || [];
             const selectedPixels = pixels.filter(p => presselPixels.includes(p.id));
@@ -1238,9 +1239,9 @@ async fetchDashboardMetrics() {
                 const params = new URLSearchParams(window.location.search);
                 const response = await fetch(\`\${API_BASE_URL}/api/registerClick\`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "Content-Type": "application/json", "x-api-key": SELLER_API_KEY },
                     body: JSON.stringify({
-                        presselId: PRESSEL_ID, // A sellerApiKey não é mais necessária no corpo
+                        presselId: PRESSEL_ID,
                         referer: document.referrer || null,
                         fbclid: params.get("fbclid") || null,
                         fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1] || null,
@@ -1273,11 +1274,11 @@ async fetchDashboardMetrics() {
             document.getElementById('pressel-code-textarea').value = htmlContent;
         },
 
-    generateCheckoutHTML(checkoutId) {
+        generateCheckoutHTML(checkoutId) {
             const checkout = this.state.data.checkouts.find(c => c.id == checkoutId);
             const { settings, pixels } = this.state.data;
             if (!checkout) { this.showToast('Checkout não encontrado.', 'error'); return; }
-            if (!settings.apiKey) { return this.showToast('API Key não encontrada. Saia e entre na plataforma novamente.', 'error'); }
+            if (!settings || !settings.apiKey) { return this.showToast('API Key não encontrada. Saia e entre na plataforma novamente.', 'error'); }
 
             const checkoutPixels = checkout.pixel_ids || [];
             const selectedPixels = pixels.filter(p => checkoutPixels.includes(p.id));
@@ -1292,7 +1293,7 @@ async fetchDashboardMetrics() {
             try {
                 // ...
                 const bodyPayload = {
-                    checkoutId: CONFIG.CHECKOUT_ID, // A sellerApiKey não é mais necessária no corpo
+                    checkoutId: CONFIG.CHECKOUT_ID,
                     referer: document.referrer,
                     user_agent: navigator.userAgent,
                     fbclid: urlParams.get('fbclid'),
@@ -1307,10 +1308,7 @@ async fetchDashboardMetrics() {
                 
                 const clickResponse = await fetch(CONFIG.API_BASE_URL + '/api/registerClick', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-api-key': CONFIG.SELLER_API_KEY // <-- CORREÇÃO AQUI
-                    },
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': CONFIG.SELLER_API_KEY },
                     body: JSON.stringify(bodyPayload)
                 });
                 
@@ -1324,8 +1322,8 @@ async fetchDashboardMetrics() {
     });
     <\/script></body></html>`;
 
+            // (O resto do código que monta o modal e a textarea continua o mesmo)
             const modalContent = `<p class="text-sm text-gray-400 mb-4">Copie o código abaixo, salve como 'index.html' e hospede no seu domínio.</p><textarea id="checkout-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#checkout-code-textarea">Copiar Código HTML</button>`;
-
             const modalContainer = document.getElementById('modal-container');
             modalContainer.innerHTML = this.templates.modal(`Código do Checkout: ${checkout.name}`, modalContent);
             modalContainer.querySelector('#checkout-code-textarea').value = htmlTemplate.trim();

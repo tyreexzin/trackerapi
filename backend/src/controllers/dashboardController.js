@@ -12,7 +12,7 @@ exports.getInitialData = async (req, res) => {
             include: {
                 pixels: true,
                 bots: true,
-                pressels: { include: { bot: { select: { bot_name: true } }, pixels: { select: { id: true } } } },
+                pressels: { include: { bot: true, pixels: { select: { id: true } } } },
                 checkouts: { include: { pixels: { select: { id: true } } } },
                 settings: true,
             }
@@ -22,10 +22,10 @@ exports.getInitialData = async (req, res) => {
         const formattedCheckouts = seller.checkouts.map(checkout => ({ ...checkout, pixel_ids: checkout.pixels.map(p => p.id) }));
         const formattedPressels = seller.pressels.map(pressel => ({ ...pressel, pixel_ids: pressel.pixels.map(p => p.id), bot_name: pressel.bot.bot_name }));
 
-        // A PARTE MAIS IMPORTANTE ESTÁ AQUI:
+        // Garante que a apiKey do vendedor seja incluída nas configurações
         const finalSettings = {
             ...seller.settings,
-            apiKey: seller.apiKey // Garante que a apiKey do vendedor seja incluída
+            apiKey: seller.apiKey
         };
 
         res.status(200).json({
