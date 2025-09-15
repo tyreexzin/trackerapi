@@ -56,3 +56,5 @@ exports.registerClick = async (req, res) => {
         res.status(500).json({ status: "error", message: "Erro interno ao registrar o clique.", error: error.message });
     }
 };
+
+module.exports = router;
