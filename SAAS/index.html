@@ -1167,9 +1167,11 @@ async fetchDashboardMetrics() {
     
     generatePresselCode(pressel) {
             const { settings, pixels } = this.state.data;
+            // Adicionamos uma checagem clara aqui
             if (!settings || !settings.apiKey) {
-                return this.showToast('API Key não encontrada. Por favor, saia e entre novamente.', 'error');
+                return this.showToast('API Key não encontrada no estado. Por favor, saia e entre novamente.', 'error');
             }
+
             const presselPixels = pressel.pixel_ids || [];
             const selectedPixels = pixels.filter(p => presselPixels.includes(p.id));
             const pixelsToTrackJSON = JSON.stringify(selectedPixels.map(p => ({ id: p.pixel_id })), null, 2);
@@ -1178,25 +1180,22 @@ async fetchDashboardMetrics() {
 
             const htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Carregando...</title><script>
         const API_BASE_URL = '${this.state.API_BASE_URL}';
-        const SELLER_API_KEY = '${settings.apiKey}';
+        const SELLER_API_KEY = '${settings.apiKey}'; // <-- Ponto crítico
         const PRESSEL_ID = '${pressel.id}';
         const TELEGRAM_USERNAME = '${botName}';
         const WHITE_PAGE_URL = '${whitePageUrl}';
         const PIXELS_TO_TRACK = ${pixelsToTrackJSON};
-        const isBot = () => /bot|facebook|crawler|spider|preview/i.test(navigator.userAgent);
-        const isMobile = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+        
         async function handleRedirect() {
-            if (isBot() || !isMobile()) {
-                window.location.replace(WHITE_PAGE_URL);
-                return;
-            }
             try {
+                if (/bot|facebook|crawler|spider|preview/i.test(navigator.userAgent) || !/android|iphone|ipad|ipod/i.test(navigator.userAgent)) {
+                    return window.location.replace(WHITE_PAGE_URL);
+                }
                 const params = new URLSearchParams(window.location.search);
                 const response = await fetch(\`\${API_BASE_URL}/api/registerClick\`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "Content-Type": "application/json", "x-api-key": SELLER_API_KEY },
                     body: JSON.stringify({
-                        sellerApiKey: SELLER_API_KEY, // Enviando no corpo
                         presselId: PRESSEL_ID,
                         referer: document.referrer || null,
                         fbclid: params.get("fbclid") || null,
@@ -1211,7 +1210,7 @@ async fetchDashboardMetrics() {
                     })
                 });
                 const data = await response.json();
-                if (response.ok && data.click_id) { // Verificação correta
+                if (response.ok && data.click_id) {
                     window.location.replace(\`https://t.me/\${TELEGRAM_USERNAME}?start=\${data.click_id}\`);
                 } else {
                     window.location.replace(WHITE_PAGE_URL);

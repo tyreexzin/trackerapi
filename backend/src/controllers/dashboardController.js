@@ -22,7 +22,7 @@ exports.getInitialData = async (req, res) => {
         const formattedCheckouts = seller.checkouts.map(checkout => ({ ...checkout, pixel_ids: checkout.pixels.map(p => p.id) }));
         const formattedPressels = seller.pressels.map(pressel => ({ ...pressel, pixel_ids: pressel.pixels.map(p => p.id), bot_name: pressel.bot.bot_name }));
 
-        // Garante que a apiKey do vendedor seja incluída nas configurações
+        // A linha mais importante:
         const finalSettings = {
             ...seller.settings,
             apiKey: seller.apiKey
