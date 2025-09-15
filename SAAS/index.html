@@ -1167,84 +1167,69 @@ async fetchDashboardMetrics() {
     
             generatePresselCode(pressel) {
             const { settings, pixels } = this.state.data;
-            const selectedPixels = pixels.filter(p => pressel.pixel_ids.includes(p.id));
-            const pixelsToTrackJSON = JSON.stringify(
-                selectedPixels.map(p => ({ id: p.pixel_id })),
-                null,
-                2
-            );
-            const htmlContent = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>VIP</title>
-    <script>
-        const API_BASE_URL = '${this.state.API_BASE_URL}';
-        const SELLER_API_KEY = '${settings.api_key}';
-        const PRESSEL_ID = '${pressel.id}';
-        const TELEGRAM_USERNAME = '${pressel.bot_name}';
-        const WHITE_PAGE_URL = '${pressel.white_page_url || 'https://google.com'}';
-        const PIXELS_TO_TRACK = ${pixelsToTrackJSON};
-        
+            if (!settings || !settings.apiKey) {
+                return this.showToast('ERRO CRÍTICO: API Key não foi carregada. Por favor, faça Logout e Login novamente.', 'error');
+            }
+
+            const presselPixels = pressel.pixel_ids || [];
+            const selectedPixels = pixels.filter(p => presselPixels.includes(p.id));
+            const pixelsToTrackJSON = JSON.stringify(selectedPixels.map(p => ({ id: p.pixel_id })), null, 2);
+
+            const config = {
+                API_BASE_URL: this.state.API_BASE_URL,
+                SELLER_API_KEY: settings.apiKey,
+                PRESSEL_ID: pressel.id,
+                TELEGRAM_USERNAME: pressel.bot_name || '',
+                WHITE_PAGE_URL: pressel.white_page_url || 'https://google.com',
+                PIXELS_TO_TRACK: pixelsToTrackJSON
+            };
+
+            const htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Carregando...</title><script>
+        const CONFIG = ${JSON.stringify(config)};
         const isBot = () => /bot|facebook|crawler|spider|preview/i.test(navigator.userAgent);
         const isMobile = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
-
         async function handleRedirect() {
             if (isBot() || !isMobile()) {
-                window.location.replace(WHITE_PAGE_URL);
-                return;
+                return window.location.replace(CONFIG.WHITE_PAGE_URL);
             }
             try {
                 const params = new URLSearchParams(window.location.search);
-                const response = await fetch(\`\${API_BASE_URL}/api/registerClick\`, {
+                const body = {
+                    presselId: CONFIG.PRESSEL_ID,
+                    referer: document.referrer || null,
+                    fbclid: params.get("fbclid") || null,
+                    fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1] || null,
+                    fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1] || null,
+                    user_agent: navigator.userAgent,
+                    utm_source: params.get("utm_source"),
+                    utm_campaign: params.get("utm_campaign"),
+                    utm_medium: params.get("utm_medium"),
+                    utm_content: params.get("utm_content"),
+                    utm_term: params.get("utm_term")
+                };
+                const response = await fetch(\`\${CONFIG.API_BASE_URL}/api/registerClick\`, {
                     method: "POST",
-                    headers: {}
-                        "application/json" },
-                        "x-api-key": SELLER_API_KEY
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "x-api-key": CONFIG.SELLER_API_KEY
                     },
-                    body: JSON.stringify({
-                          presselId: PRESSEL_ID,
-                          referer: document.referrer || null,
-                          fbclid: params.get("fbclid") || null,
-                          fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1] || null,
-                          fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1] || null,
-                          user_agent: navigator.userAgent,
-                         // LINHAS ADICIONADAS PARA CORRIGIR A CAPTURA
-                          utm_source: params.get("utm_source"),
-                          utm_campaign: params.get("utm_campaign"),
-                          utm_medium: params.get("utm_medium"),
-                          utm_content: params.get("utm_content"),
-                          utm_term: params.get("utm_term")
-                    })
+                    body: JSON.stringify(body)
                 });
                 const data = await response.json();
-                if (response.ok && data.status === "success") {
-                    window.location.replace(\`https://t.me/\${TELEGRAM_USERNAME}?start=\${data.click_id}\`);
+                if (response.ok && data.click_id) {
+                    window.location.replace(\`https://t.me/\${CONFIG.TELEGRAM_USERNAME}?start=\${data.click_id}\`);
                 } else {
-                    window.location.replace(WHITE_PAGE_URL);
+                    window.location.replace(CONFIG.WHITE_PAGE_URL);
                 }
             } catch (error) {
-                window.location.replace(WHITE_PAGE_URL);
+                window.location.replace(CONFIG.WHITE_PAGE_URL);
             }
         }
-        
-        // Adiciona o atraso de 500ms para permitir que o Pixel crie os cookies.
         setTimeout(handleRedirect, 500);
     <\/script>
-    <script>
-        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src='https://connect.facebook.net/en_US/fbevents.js';s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script');
-        PIXELS_TO_TRACK.forEach(p => { fbq('init', p.id); });
-        fbq('track', 'PageView');
-    <\/script>
-    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=\${selectedPixels.length > 0 ? selectedPixels[0].pixel_id : ''}&ev=PageView&noscript=1"/></noscript>
-</head>
-<body><p>Redirecionando...</p></body>
-</html>`;
+    <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src='https://connect.facebook.net/en_US/fbevents.js';s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script');const pixels = JSON.parse(CONFIG.PIXELS_TO_TRACK); if(pixels){pixels.forEach(p=>{fbq('init',p.id)})}fbq('track','PageView');<\/script></head><body><p>Redirecionando...</p></body></html>`;
 
-            // Mantém a mesma lógica de modal para exibir o código
-            const modalContent = `<p class="text-sm text-gray-400 mb-4">Código gerado com a lógica do sistema antigo. Copie e cole no HTML da sua página.</p><textarea id="pressel-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#pressel-code-textarea">Copiar Código</button>`;
-
+            const modalContent = `<p class="text-sm text-text-secondary mb-4">Copie o código abaixo e cole no HTML da sua página.</p><textarea id="pressel-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#pressel-code-textarea">Copiar Código</button>`;
             document.getElementById('modal-container').innerHTML = this.templates.modal(`Código da Pressel: ${pressel.name}`, modalContent);
             document.getElementById('pressel-code-textarea').value = htmlContent;
         },
