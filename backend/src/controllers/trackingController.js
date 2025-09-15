@@ -1,12 +1,14 @@
-// src/controllers/trackingController.js
+// backend/src/controllers/trackingController.js
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 exports.registerClick = async (req, res) => {
-    // Agora estamos pegando cada campo explicitamente do corpo da requisição
+    // Usamos o req.seller que o apiKeyMiddleware nos deu
+    const { seller } = req;
+
+    // Pegamos os dados específicos do corpo
     const {
-        sellerApiKey,
         checkoutId,
         presselId,
         referer,
@@ -21,23 +23,9 @@ exports.registerClick = async (req, res) => {
         utm_term
     } = req.body;
 
-    if (!sellerApiKey) {
-        return res.status(401).json({ message: "API Key do vendedor é obrigatória." });
-    }
-
     try {
-        // 1. Encontra o vendedor pela API Key (continua igual)
-        const seller = await prisma.seller.findUnique({
-            where: { apiKey: sellerApiKey }
-        });
-
-        if (!seller) {
-            return res.status(403).json({ message: "API Key inválida." });
-        }
-
-        // 2. Prepara os dados para salvar o clique, agora com todos os campos nomeados
         const clickData = {
-            sellerId: seller.id,
+            sellerId: seller.id, // Usamos o ID do vendedor encontrado pelo middleware
             checkoutId,
             presselId,
             referer,
@@ -51,21 +39,23 @@ exports.registerClick = async (req, res) => {
             utm_content,
             utm_term
         };
-        
-        // Bônus: Remove qualquer campo que seja nulo ou indefinido
-        // Isso evita erros no banco de dados se um parâmetro opcional não for enviado
+
+        // Limpa qualquer campo que seja nulo ou indefinido
         Object.keys(clickData).forEach(key => (clickData[key] === undefined || clickData[key] === null) && delete clickData[key]);
 
-        // 3. Salva o clique no banco de dados (continua igual)
+        console.log('[registerClick] Tentando salvar os seguintes dados:', clickData);
+
         const newClick = await prisma.click.create({
             data: clickData
         });
 
-        // 4. Retorna o ID do clique (continua igual)
+        console.log(`[registerClick] Clique salvo com sucesso! ID: ${newClick.id}`);
+
         res.status(201).json({ click_id: newClick.id });
 
     } catch (error) {
-        console.error("Erro ao registrar clique:", error);
-        res.status(500).json({ message: "Erro interno ao registrar o clique." });
+        console.error("[registerClick] Erro CRÍTICO ao salvar o clique:", error);
+        // Garante que a resposta de erro seja sempre um JSON
+        res.status(500).json({ message: "Erro interno ao registrar o clique.", error: error.message });
     }
 };
