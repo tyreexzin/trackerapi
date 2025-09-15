@@ -25,7 +25,8 @@ exports.getInitialData = async (req, res) => {
         // A linha mais importante:
         const finalSettings = {
             ...seller.settings,
-            apiKey: seller.apiKey
+            apiKey: seller.apiKey,
+            api_key: seller.apiKey
         };
 
         res.status(200).json({

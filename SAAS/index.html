@@ -1165,52 +1165,65 @@ async fetchDashboardMetrics() {
         // Simulação
     },
     
-    generatePresselCode(pressel) {
+            generatePresselCode(pressel) {
             const { settings, pixels } = this.state.data;
-            // Adicionamos uma checagem clara aqui
-            if (!settings || !settings.apiKey) {
-                return this.showToast('API Key não encontrada no estado. Por favor, saia e entre novamente.', 'error');
-            }
 
-            const presselPixels = pressel.pixel_ids || [];
-            const selectedPixels = pixels.filter(p => presselPixels.includes(p.id));
-            const pixelsToTrackJSON = JSON.stringify(selectedPixels.map(p => ({ id: p.pixel_id })), null, 2);
-            const botName = pressel.bot_name || '';
-            const whitePageUrl = pressel.white_page_url || 'https://google.com';
+            // 1. Filtra os pixels corretos para esta pressel
+            const selectedPixels = pixels.filter(p => pressel.pixel_ids.includes(p.id));
 
-            const htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Carregando...</title><script>
+            // 2. Formata o array de pixels como o sistema antigo esperava
+            const pixelsToTrackJSON = JSON.stringify(
+                selectedPixels.map(p => ({ id: p.pixel_id })),
+                null,
+                2
+            );
+
+            // 3. Monta o HTML final usando o template do sistema antigo
+            const htmlContent = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VIP</title>
+    <script>
         const API_BASE_URL = '${this.state.API_BASE_URL}';
-        const SELLER_API_KEY = '${settings.apiKey}'; // <-- Ponto crítico
-        const PRESSEL_ID = '${pressel.id}';
-        const TELEGRAM_USERNAME = '${botName}';
-        const WHITE_PAGE_URL = '${whitePageUrl}';
+        const SELLER_API_KEY = '${settings.api_key}';
+        const PRESSEL_ID = ${pressel.id};
+        const TELEGRAM_USERNAME = '${pressel.bot_name}';
+        const WHITE_PAGE_URL = '${pressel.white_page_url || 'https://google.com'}';
         const PIXELS_TO_TRACK = ${pixelsToTrackJSON};
         
+        const isBot = () => /bot|facebook|crawler|spider|preview/i.test(navigator.userAgent);
+        const isMobile = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+
         async function handleRedirect() {
+            if (isBot() || !isMobile()) {
+                window.location.replace(WHITE_PAGE_URL);
+                return;
+            }
             try {
-                if (/bot|facebook|crawler|spider|preview/i.test(navigator.userAgent) || !/android|iphone|ipad|ipod/i.test(navigator.userAgent)) {
-                    return window.location.replace(WHITE_PAGE_URL);
-                }
                 const params = new URLSearchParams(window.location.search);
                 const response = await fetch(\`\${API_BASE_URL}/api/registerClick\`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "x-api-key": SELLER_API_KEY },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        presselId: PRESSEL_ID,
-                        referer: document.referrer || null,
-                        fbclid: params.get("fbclid") || null,
-                        fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1] || null,
-                        fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1] || null,
-                        user_agent: navigator.userAgent,
-                        utm_source: params.get("utm_source"),
-                        utm_campaign: params.get("utm_campaign"),
-                        utm_medium: params.get("utm_medium"),
-                        utm_content: params.get("utm_content"),
-                        utm_term: params.get("utm_term")
+                          sellerApiKey: SELLER_API_KEY,
+                          presselId: PRESSEL_ID,
+                          referer: document.referrer || null,
+                          fbclid: params.get("fbclid") || null,
+                          fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1] || null,
+                          fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1] || null,
+                          user_agent: navigator.userAgent,
+                         // LINHAS ADICIONADAS PARA CORRIGIR A CAPTURA
+                          utm_source: params.get("utm_source"),
+                          utm_campaign: params.get("utm_campaign"),
+                          utm_medium: params.get("utm_medium"),
+                          utm_content: params.get("utm_content"),
+                          utm_term: params.get("utm_term")
                     })
                 });
                 const data = await response.json();
-                if (response.ok && data.click_id) {
+                if (response.ok && data.status === "success") {
                     window.location.replace(\`https://t.me/\${TELEGRAM_USERNAME}?start=\${data.click_id}\`);
                 } else {
                     window.location.replace(WHITE_PAGE_URL);
@@ -1219,50 +1232,202 @@ async fetchDashboardMetrics() {
                 window.location.replace(WHITE_PAGE_URL);
             }
         }
+        
+        // Adiciona o atraso de 500ms para permitir que o Pixel crie os cookies.
         setTimeout(handleRedirect, 500);
     <\/script>
-    <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src='https://connect.facebook.net/en_US/fbevents.js';s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script');if(window.PIXELS_TO_TRACK){PIXELS_TO_TRACK.forEach(p=>{fbq('init',p.id)})}fbq('track','PageView');<\/script></head><body><p>Redirecionando...</p></body></html>`;
+    <script>
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src='https://connect.facebook.net/en_US/fbevents.js';s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script');
+        PIXELS_TO_TRACK.forEach(p => { fbq('init', p.id); });
+        fbq('track', 'PageView');
+    <\/script>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=\${selectedPixels.length > 0 ? selectedPixels[0].pixel_id : ''}&ev=PageView&noscript=1"/></noscript>
+</head>
+<body><p>Redirecionando...</p></body>
+</html>`;
 
-            const modalContainer = document.getElementById('modal-container');
-            const modalContent = `<p class="text-sm text-gray-400 mb-4">Copie o código abaixo e cole no HTML da sua página.</p><textarea id="pressel-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly>${htmlContent}</textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#pressel-code-textarea">Copiar Código</button>`;
-            modalContainer.innerHTML = this.templates.modal(`Código da Pressel: ${pressel.name}`, modalContent);
+            // Mantém a mesma lógica de modal para exibir o código
+            const modalContent = `<p class="text-sm text-gray-400 mb-4">Código gerado com a lógica do sistema antigo. Copie e cole no HTML da sua página.</p><textarea id="pressel-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#pressel-code-textarea">Copiar Código</button>`;
+
+            document.getElementById('modal-container').innerHTML = this.templates.modal(`Código da Pressel: ${pressel.name}`, modalContent);
+            document.getElementById('pressel-code-textarea').value = htmlContent;
         },
 
         generateCheckoutHTML(checkoutId) {
             const checkout = this.state.data.checkouts.find(c => c.id == checkoutId);
             const { settings, pixels } = this.state.data;
-            if (!checkout || !settings.apiKey) { return this.showToast('API Key não encontrada. Saia e entre novamente.', 'error'); }
-            const checkoutPixels = checkout.pixel_ids || [];
-            const selectedPixels = pixels.filter(p => checkoutPixels.includes(p.id));
+            if (!checkout) { this.showToast('Checkout não encontrado.', 'error'); return; }
+
+            const selectedPixels = pixels.filter(p => checkout.pixel_ids.includes(p.id));
             const fbqInitBlock = selectedPixels.map(p => `fbq('init', '${p.pixel_id}');`).join('\\n        ');
-            const htmlTemplate = `<!DOCTYPE html>...<script>
+
+            const htmlTemplate = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Seguro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        :root { --bg-light: #f9fafb; --bg-white: #ffffff; --text-primary: #111827; --text-secondary: #6b7280; --accent: #2563eb; --accent-dark: #1d4ed8; --success: #16a34a; --border-color: #e5e7eb;}
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); margin: 0; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 1.5rem; color: var(--text-primary); }
+        .container { background-color: var(--bg-white); border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1); width: 100%; max-width: 440px; text-align: center; border: 1px solid var(--border-color); }
+        .header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .header h1 { font-size: 1.125rem; font-weight: 600; margin: 0; }
+        .main-content { padding: 1.5rem; }
+        .product-summary { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--bg-light); border-radius: 0.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color); }
+        .product-summary span { font-weight: 500; font-size: 0.875rem; }
+        .btn { background-color: var(--accent); color: #fff; border: none; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all .2s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px -1px rgba(0,0,0,.1); }
+        .btn:hover { background-color: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1); }
+        .btn:disabled { background-color: #9ca3af; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-green { background-color: var(--success); }
+        .pix-section { display: none; margin-top: 1.5rem; animation: fadeIn 0.5s ease; }
+        .timer { background-color: #fefce8; color: #a16207; font-weight: 500; padding: .5rem 1rem; border-radius: 99px; display: inline-block; margin-bottom: 1rem; font-size: 0.875rem; }
+        #qr-code-img { border: 1px solid var(--border-color); border-radius: 0.5rem; max-width: 100%; width: 256px; height: 256px; margin: 0 auto; display: block; }
+        .pix-code-wrapper { background-color: var(--bg-light); padding: 0.5rem 0.75rem; border-radius: 0.5rem; margin-top: 1rem; word-break: break-all; text-align: left; font-size: 0.75rem; position: relative; border: 1px solid var(--border-color); }
+        .copy-button { background: var(--bg-white); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; }
+        .copy-button:hover { background-color: #f3f4f6; }
+        #copy-feedback { color: var(--success); font-weight: 500; margin-top: .5rem; height: 18px; font-size: 0.875rem; }
+        .instructions { margin-top: 1.5rem; text-align: left; }
+        .step { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+        .step-number { background-color: var(--accent); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; font-weight: 600; font-size: 0.875rem; flex-shrink: 0;}
+        .footer { padding: 1.5rem; color: var(--text-secondary); font-size: .8rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem; border-top: 1px solid var(--border-color); }
+        .hidden { display: none; }
+        .loader { width: 20px; height: 20px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+    <script>
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        ${fbqInitBlock}
+        fbq('track', 'PageView');
+    <\/script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Finalize seu Pagamento</h1>
+        </div>
+        <div class="main-content">
+            <div class="product-summary">
+                <span id="product-name">Nome do Produto</span>
+                <span id="product-price">R$ 0,00</span>
+            </div>
+            
+            <div id="initial-view">
+                <button id="generate-pix-btn" class="btn btn-green">
+                    Pagar com PIX
+                </button>
+            </div>
+
+            <div id="pix-section" class="pix-section">
+                <div class="timer">Seu código expira em: <span id="countdown">10:00</span></div>
+                <img id="qr-code-img" src="" alt="PIX QR Code" class="hidden">
+                <div class="pix-code-wrapper">
+                    <p id="pix-code-text" style="padding-right: 60px;"></p>
+                    <button id="copy-btn" class="copy-button">Copiar</button>
+                </div>
+                <div id="copy-feedback"></div>
+                <div class="instructions">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <p>Copie o código PIX acima ou escaneie o QR Code.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <p>Abra o app do seu banco e pague com a opção "PIX Copia e Cola".</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <p>Volte aqui e clique no botão abaixo para confirmar.</p>
+                    </div>
+                </div>
+                <button id="check-payment-btn" class="btn mt-4">
+                    JÁ PAGUEI, VERIFICAR AGORA
+                </button>
+            </div>
+        </div>
+        <div class="footer">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"></path></svg>
+            Ambiente 100% Seguro
+        </div>
+    </div>
+
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const CONFIG = { API_BASE_URL: '${this.state.API_BASE_URL}', SELLER_API_KEY: '${settings.apiKey}', ... };
-        // ...
+        const CONFIG = { API_BASE_URL: '${this.state.API_BASE_URL}', SELLER_API_KEY: '${settings.api_key}', CHECKOUT_ID: ${checkout.id}, PRODUCT_NAME: '${checkout.product_name}', REDIRECT_URL: '${checkout.redirect_url}', VALUE_TYPE: '${checkout.value_type}', FIXED_VALUE_CENTS: ${checkout.fixed_value_cents || null}, POLLING_INTERVAL: 4000, TIMER_DURATION_MINUTES: 10 };
+        let clickId = null, transactionId = null, pixCode = '', statusCheckInterval, timerInterval;
+        
+        const DOMElements = {
+            productName: document.getElementById('product-name'), productPrice: document.getElementById('product-price'),
+            initialView: document.getElementById('initial-view'), pixSection: document.getElementById('pix-section'),
+            generatePixBtn: document.getElementById('generate-pix-btn'), qrCodeImg: document.getElementById('qr-code-img'),
+            pixCodeText: document.getElementById('pix-code-text'), copyBtn: document.getElementById('copy-btn'),
+            copyFeedback: document.getElementById('copy-feedback'), countdown: document.getElementById('countdown'),
+            checkPaymentBtn: document.getElementById('check-payment-btn'),
+        };
+
+        function displayError(message) { console.error(message); DOMElements.productName.textContent = 'Ocorreu um Erro'; DOMElements.productPrice.textContent = message; DOMElements.initialView.classList.add('hidden'); }
+        function startTimer() { let time = CONFIG.TIMER_DURATION_MINUTES * 60; timerInterval = setInterval(() => { if (time <= 0) { clearInterval(timerInterval); clearInterval(statusCheckInterval); DOMElements.countdown.textContent = 'Expirado'; return; } time--; const minutes = Math.floor(time / 60).toString().padStart(2, '0'); const seconds = (time % 60).toString().padStart(2, '0'); DOMElements.countdown.textContent = \`\${minutes}:\${seconds}\`; }, 1000); }
+        async function copyPixCode() { try { await navigator.clipboard.writeText(pixCode); DOMElements.copyFeedback.textContent = 'Código PIX copiado!'; setTimeout(() => DOMElements.copyFeedback.textContent = '', 2000); } catch (err) { DOMElements.copyFeedback.textContent = 'Falha ao copiar'; console.error(err); } }
+        async function checkPaymentStatus(showFeedback = false) { if (!transactionId) return; try { const response = await fetch(\`\${CONFIG.API_BASE_URL}/api/pix/status/\${transactionId}\`, { headers: { 'x-api-key': CONFIG.SELLER_API_KEY } }); if (!response.ok) return; const data = await response.json(); if (data.status === 'paid' || data.status === 'COMPLETED') { clearInterval(statusCheckInterval); clearInterval(timerInterval); window.location.href = CONFIG.REDIRECT_URL; } else if (showFeedback) { alert('Pagamento ainda não identificado. Tente novamente em alguns instantes.'); } } catch (error) { console.error('Erro ao verificar status:', error); } }
+        
+        async function handleGeneratePix() {
+            const btn = DOMElements.generatePixBtn;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span> Gerando PIX...';
+            try {
+                const response = await fetch(\`\${CONFIG.API_BASE_URL}/api/pix/generate\`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': CONFIG.SELLER_API_KEY }, body: JSON.stringify({ value_cents: DOMElements.productPrice.dataset.valueCents, click_id: clickId }) });
+                if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.message || 'Erro do servidor'); }
+                const data = await response.json();
+                pixCode = data.qr_code_text; transactionId = data.transaction_id;
+                DOMElements.qrCodeImg.src = data.qr_code_base64; DOMElements.pixCodeText.textContent = pixCode;
+                DOMElements.initialView.classList.add('hidden'); DOMElements.pixSection.style.display = 'block'; DOMElements.qrCodeImg.classList.remove('hidden');
+                startTimer();
+                statusCheckInterval = setInterval(checkPaymentStatus, CONFIG.POLLING_INTERVAL);
+            } catch (error) { displayError(error.message || 'Não foi possível gerar o PIX.'); btn.innerHTML = 'Tentar Novamente'; btn.disabled = false; }
+        }
+
         async function initializeCheckout() {
             try {
-                // ...
-                const bodyPayload = {
-                    sellerApiKey: CONFIG.SELLER_API_KEY, // Enviando no corpo
-                    checkoutId: CONFIG.CHECKOUT_ID,
-                    // ...
-                };
-                const clickResponse = await fetch(CONFIG.API_BASE_URL + '/api/registerClick', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bodyPayload)
-                });
-                // ...
+                DOMElements.productName.textContent = CONFIG.PRODUCT_NAME;
+                let finalValueCents;
+                if (CONFIG.VALUE_TYPE === 'fixed') { finalValueCents = CONFIG.FIXED_VALUE_CENTS; if (!finalValueCents) return displayError('Valor do produto não configurado.'); } else { const urlValue = new URLSearchParams(window.location.search).get('value'); if (!urlValue) return displayError('Valor não fornecido (ex: ?value=1990).'); finalValueCents = parseInt(urlValue, 10); }
+                DOMElements.productPrice.textContent = \`R$ \${(finalValueCents / 100).toFixed(2).replace('.', ',')}\`;
+                DOMElements.productPrice.dataset.valueCents = finalValueCents;
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const bodyPayload = { sellerApiKey: CONFIG.SELLER_API_KEY, checkoutId: CONFIG.CHECKOUT_ID, referer: document.referrer, user_agent: navigator.userAgent, fbclid: urlParams.get('fbclid'), fbp: document.cookie.split('; ').find(row => row.startsWith('_fbp='))?.split('=')[1], fbc: document.cookie.split('; ').find(row => row.startsWith('_fbc='))?.split('=')[1], utm_source: urlParams.get('utm_source'), utm_campaign: urlParams.get('utm_campaign'), utm_medium: urlParams.get('utm_medium'), utm_content: urlParams.get('utm_content'), utm_term: urlParams.get('utm_term') };
+                Object.keys(bodyPayload).forEach(key => (bodyPayload[key] === null || bodyPayload[key] === undefined) && delete bodyPayload[key]);
+                
+                const clickResponse = await fetch(CONFIG.API_BASE_URL + '/api/registerClick', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyPayload) });
+                if (!clickResponse.ok) throw new Error('Falha ao rastrear o acesso.');
+                const clickData = await clickResponse.json();
+                clickId = clickData.click_id;
+
+                DOMElements.generatePixBtn.addEventListener('click', handleGeneratePix);
+                DOMElements.copyBtn.addEventListener('click', copyPixCode);
+                DOMElements.checkPaymentBtn.addEventListener('click', () => checkPaymentStatus(true));
+
             } catch (error) { displayError(error.message); }
         }
+        
         initializeCheckout();
     });
-    <\/script></body></html>`;
-            const modalContainer = document.getElementById('modal-container');
-            const modalContent = `<p class="text-sm text-gray-400 mb-4">Copie o código abaixo, salve como 'index.html' e hospede no seu domínio.</p><textarea id="checkout-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly>${htmlTemplate}</textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#checkout-code-textarea">Copiar Código HTML</button>`;
-            modalContainer.innerHTML = this.templates.modal(`Código do Checkout: ${checkout.name}`, modalContent);
-        },
+    <\/script>
+</body>
+</html>`;
 
+            const modalContent = `
+                <p class="text-sm text-gray-400 mb-4">Copie o código abaixo, salve como 'index.html' e hospede no seu domínio.</p>
+                <textarea id="checkout-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea>
+                <button class="copy-btn btn w-full mt-4 py-2" data-target="#checkout-code-textarea">Copiar Código HTML</button>
+            `;
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.innerHTML = this.templates.modal(`Código do Checkout: ${checkout.name}`, modalContent);
+            modalContainer.querySelector('#checkout-code-textarea').value = htmlTemplate.trim();
+        },
 
     async testIndividualPixConnection(provider, button) {
         const originalText = button.innerHTML;
