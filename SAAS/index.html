@@ -1167,60 +1167,67 @@ async fetchDashboardMetrics() {
     
             generatePresselCode(pressel) {
             const { settings, pixels } = this.state.data;
-            if (!settings || !settings.apiKey) {
-                return this.showToast('ERRO CRÍTICO: API Key não foi carregada. Por favor, faça Logout e Login novamente.', 'error');
+            if (!settings || !settings.api_key) {
+                return this.showToast('API Key não encontrada. Saia e entre novamente.', 'error');
             }
-
             const presselPixels = pressel.pixel_ids || [];
             const selectedPixels = pixels.filter(p => presselPixels.includes(p.id));
+            const pixelsToTrackJSON = JSON.stringify(
+                selectedPixels.map(p => ({ id: p.pixel_id })), null, 2
+            );
 
-            const config = {
-                API_BASE_URL: this.state.API_BASE_URL,
-                SELLER_API_KEY: settings.apiKey,
-                PRESSEL_ID: pressel.id,
-                TELEGRAM_USERNAME: pressel.bot_name || '',
-                WHITE_PAGE_URL: pressel.white_page_url || 'https://google.com',
-                PIXELS_TO_TRACK: selectedPixels.map(p => ({ id: p.pixel_id }))
-            };
-
-            const htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Carregando...</title><script>
-        const CONFIG = ${JSON.stringify(config)};
+            const htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>VIP</title><script>
+        const API_BASE_URL = '${this.state.API_BASE_URL}';
+        const SELLER_API_KEY = '${settings.api_key}';
+        const PRESSEL_ID = '${pressel.id}';
+        const TELEGRAM_USERNAME = '${pressel.bot_name}';
+        const WHITE_PAGE_URL = '${pressel.white_page_url || 'https://google.com'}';
+        const PIXELS_TO_TRACK = ${pixelsToTrackJSON};
         const isBot = () => /bot|facebook|crawler|spider|preview/i.test(navigator.userAgent);
         const isMobile = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
         async function handleRedirect() {
             if (isBot() || !isMobile()) {
-                return window.location.replace(CONFIG.WHITE_PAGE_URL);
+                window.location.replace(WHITE_PAGE_URL);
+                return;
             }
             try {
                 const params = new URLSearchParams(window.location.search);
-                const body = {
-                    presselId: CONFIG.PRESSEL_ID, referer: document.referrer || null,
-                    fbclid: params.get("fbclid"), fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1], fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1],
-                    user_agent: navigator.userAgent, utm_source: params.get("utm_source"), utm_campaign: params.get("utm_campaign"),
-                    utm_medium: params.get("utm_medium"), utm_content: params.get("utm_content"), utm_term: params.get("utm_term")
-                };
-                const response = await fetch(\`\${CONFIG.API_BASE_URL}/api/registerClick\`, {
+                const response = await fetch(\`\${API_BASE_URL}/api/registerClick\`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "x-api-key": CONFIG.SELLER_API_KEY },
-                    body: JSON.stringify(body)
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        sellerApiKey: SELLER_API_KEY,
+                        presselId: PRESSEL_ID,
+                        referer: document.referrer || null,
+                        fbclid: params.get("fbclid") || null,
+                        fbp: document.cookie.match(/_fbp=([^;]+)/)?.[1] || null,
+                        fbc: document.cookie.match(/_fbc=([^;]+)/)?.[1] || null,
+                        user_agent: navigator.userAgent,
+                        utm_source: params.get("utm_source"),
+                        utm_campaign: params.get("utm_campaign"),
+                        utm_medium: params.get("utm_medium"),
+                        utm_content: params.get("utm_content"),
+                        utm_term: params.get("utm_term")
+                    })
                 });
                 const data = await response.json();
-                if (response.ok && data.click_id) {
-                    window.location.replace(\`https://t.me/\${CONFIG.TELEGRAM_USERNAME}?start=\${data.click_id}\`);
+                if (response.ok && data.status === "success") {
+                    window.location.replace(\`https://t.me/\${TELEGRAM_USERNAME}?start=\${data.click_id}\`);
                 } else {
-                    window.location.replace(CONFIG.WHITE_PAGE_URL);
+                    window.location.replace(WHITE_PAGE_URL);
                 }
             } catch (error) {
-                window.location.replace(CONFIG.WHITE_PAGE_URL);
+                window.location.replace(WHITE_PAGE_URL);
             }
         }
         setTimeout(handleRedirect, 500);
     <\/script>
-    <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src='https://connect.facebook.net/en_US/fbevents.js';s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script');if(CONFIG.PIXELS_TO_TRACK){CONFIG.PIXELS_TO_TRACK.forEach(p=>{fbq('init',p.id)})}fbq('track','PageView');<\/script></head><body><p>Redirecionando...</p></body></html>`;
+    <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src='https://connect.facebook.net/en_US/fbevents.js';s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script');PIXELS_TO_TRACK.forEach(p=>{fbq('init',p.id)});fbq('track','PageView');<\/script></head><body><p>Redirecionando...</p></body></html>`;
 
-            const modalContent = `<p class="text-sm text-text-secondary mb-4">Copie o código abaixo e cole no HTML da sua página.</p><textarea id="pressel-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#pressel-code-textarea">Copiar Código</button>`;
-            document.getElementById('modal-container').innerHTML = this.templates.modal(`Código da Pressel: ${pressel.name}`, modalContent);
-            document.getElementById('pressel-code-textarea').value = htmlContent;
+            const modalContainer = document.getElementById('modal-container');
+            const modalContent = `<p class="text-sm text-gray-400 mb-4">Código gerado. Copie e cole no HTML da sua página.</p><textarea id="pressel-code-textarea" class="form-input w-full p-2 font-mono text-xs" rows="15" readonly></textarea><button class="copy-btn btn w-full mt-4 py-2" data-target="#pressel-code-textarea">Copiar Código</button>`;
+            modalContainer.innerHTML = this.templates.modal(`Código da Pressel: ${pressel.name}`, modalContent);
+            modalContainer.querySelector('#pressel-code-textarea').value = htmlContent;
         },
 
         generateCheckoutHTML(checkoutId) {
