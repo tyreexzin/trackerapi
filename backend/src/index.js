@@ -39,5 +39,12 @@ app.use('/api', settingsRoutes);
 // A rota de webhook continua separada
 app.use('/webhooks', webhookRoutes);
 
-// Exportamos o app para a Vercel
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor local rodando na porta ${PORT}`);
+  });
+}
+
+// Exportamos o app para a Vercel usar como Serverless Function
 module.exports = app;

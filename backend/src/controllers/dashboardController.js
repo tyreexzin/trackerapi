@@ -54,3 +54,48 @@ exports.getInitialData = async (req, res) => {
         res.status(500).json({ message: 'Erro ao buscar dados.', error: error.message });
     }
 };
+
+exports.getMetrics = async (req, res) => {
+    const { sellerId } = req;
+    
+    // Filtros de data (opcionais, vindo da URL. Ex: ?startDate=2025-09-01)
+    const { startDate, endDate } = req.query;
+    const dateFilter = startDate && endDate 
+        ? { createdAt: { gte: new Date(startDate), lte: new Date(endDate) } } 
+        : {};
+
+    try {
+        // Usando o poder do Prisma para calcular tudo de uma vez
+        const total_clicks = await prisma.click.count({
+            where: { sellerId, ...dateFilter }
+        });
+
+        const pix_transactions = await prisma.transaction.aggregate({
+            _count: { id: true },
+            _sum: { pix_value: true },
+            where: { sellerId, ...dateFilter }
+        });
+
+        const paid_pix_transactions = await prisma.transaction.aggregate({
+            _count: { id: true },
+            _sum: { pix_value: true },
+            where: { sellerId, status: 'paid', ...dateFilter }
+        });
+
+        const metrics = {
+            total_clicks: total_clicks || 0,
+            total_pix_generated: pix_transactions._count.id || 0,
+            total_revenue: pix_transactions._sum.pix_value || 0,
+            total_pix_paid: paid_pix_transactions._count.id || 0,
+            paid_revenue: paid_pix_transactions._sum.pix_value || 0,
+            // Outras métricas como 'bots_performance' e 'clicks_by_state' podem ser adicionadas aqui
+            // usando groupBy e aggregate do Prisma.
+        };
+
+        res.status(200).json(metrics);
+
+    } catch (error) {
+        console.error("Erro ao buscar métricas do dashboard:", error);
+        res.status(500).json({ message: 'Erro ao buscar as métricas.' });
+    }
+};

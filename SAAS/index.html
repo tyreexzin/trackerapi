@@ -176,7 +176,7 @@
 <script>
     const App = {
         state: {
-            API_BASE_URL: 'http://localhost:3000',
+            API_BASE_URL: 'https://trackerapi.vercel.app',
             token: null,
             data: {
                 pixels: [], bots: [], pressels: [], checkouts: [],
@@ -1020,30 +1020,38 @@
         }, 50);
     },
     
-    async fetchDashboardMetrics() {
-        // Simulação enquanto o back-end não está pronto
-        this.state.data.dashboard = {
-            total_clicks: (Math.random() * 5000 + 1000).toFixed(0),
-            total_pix_generated: (Math.random() * 800 + 200).toFixed(0),
-            total_pix_paid: (Math.random() * 200 + 50).toFixed(0),
-            total_revenue: (Math.random() * 20000 + 5000),
-            paid_revenue: (Math.random() * 10000 + 1000),
-            bots_performance: this.state.data.bots.map(b => ({
-                bot_name: b.bot_name,
-                total_clicks: (Math.random() * 1000).toFixed(0),
-                total_pix_paid: (Math.random() * 50).toFixed(0),
-                paid_revenue: (Math.random() * 2000)
-            })),
-            clicks_by_state: [{state: 'SP', total_clicks: 1200}, {state: 'RJ', total_clicks: 850}, {state: 'MG', total_clicks: 600}],
-            daily_revenue: Array.from({length: 7}, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                return { date: d.toISOString().split('T')[0], revenue: Math.random() * 1500 };
-            })
-        };
-        this.renderRevenueChart();
-        this.fetchAchievementsAndRanking();
-    },
+    // DENTRO DO <script> DO SEU index.html
+
+// Substitua a função de simulação por esta:
+async fetchDashboardMetrics() {
+    try {
+        // Adicionamos os filtros de data à URL se eles existirem
+        const { startDate, endDate } = this.state.dateFilter;
+        const query = new URLSearchParams({
+            startDate: startDate || '',
+            endDate: endDate || ''
+        }).toString();
+        
+        const metrics = await this.apiRequest(`/api/dashboard/metrics?${query}`);
+        
+        document.getElementById('metric-clicks').textContent = metrics.total_clicks || '0';
+        document.getElementById('metric-generated').textContent = metrics.total_pix_generated || '0';
+        document.getElementById('metric-paid').textContent = metrics.total_pix_paid || '0';
+        document.getElementById('metric-total-revenue').textContent = `R$ ${(metrics.total_revenue || 0).toFixed(2).replace('.', ',')}`;
+        document.getElementById('metric-paid-revenue').textContent = `R$ ${(metrics.paid_revenue || 0).toFixed(2).replace('.', ',')}`;
+
+        // Limpa as tabelas de simulação
+        const botsTableBody = document.getElementById('bots-performance-table');
+        if (botsTableBody) botsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Dados de performance por bot ainda não implementados.</td></tr>';
+        
+        const trafficTableBody = document.getElementById('traffic-by-state-table');
+        if (trafficTableBody) trafficTableBody.innerHTML = '<tr><td colspan="2" class="text-center text-gray-500 py-4">Dados de tráfego por estado ainda não implementados.</td></tr>';
+
+    } catch (error) {
+        console.error("Erro ao carregar métricas do painel:", error);
+        this.showToast('Não foi possível carregar as métricas do painel.', 'error');
+    }
+},
 
     async fetchAchievementsAndRanking() {
         // Simulação

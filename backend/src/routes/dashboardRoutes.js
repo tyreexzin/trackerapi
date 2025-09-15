@@ -8,5 +8,6 @@ const authMiddleware = require('../middlewares/authMiddleware');
 // Usamos o middleware para proteger esta rota.
 // Só usuários com token válido podem acessar.
 router.get('/dashboard/data', authMiddleware, dashboardController.getInitialData);
+router.get('/dashboard/metrics', dashboardController.getMetrics); 
 
 module.exports = router;
