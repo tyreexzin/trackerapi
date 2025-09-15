@@ -12,20 +12,33 @@ exports.getInitialData = async (req, res) => {
             include: {
                 pixels: true,
                 bots: true,
-                pressels: { include: { bot: { select: { bot_name: true } } } },
-                checkouts: { include: { pixels: { select: { id: true } } } },
+                pressels: { // <-- CORREÇÃO AQUI
+                    include: { 
+                        bot: { select: { bot_name: true } },
+                        pixels: { select: { id: true } } // Pede para incluir os pixels da pressel
+                    } 
+                },
+                checkouts: { 
+                    include: { 
+                        pixels: { select: { id: true } } 
+                    } 
+                },
                 settings: true,
             }
         });
         if (!seller) return res.status(404).json({ message: "Vendedor não encontrado." });
 
+        // Formata os checkouts e pressels para o front-end
         const formattedCheckouts = seller.checkouts.map(checkout => ({ ...checkout, pixel_ids: checkout.pixels.map(p => p.id) }));
-        const formattedPressels = seller.pressels.map(p => ({ ...p, bot_name: p.bot.bot_name }));
+        const formattedPressels = seller.pressels.map(pressel => ({ ...pressel, pixel_ids: pressel.pixels.map(p => p.id), bot_name: pressel.bot.bot_name }));
         const finalSettings = { ...seller.settings, apiKey: seller.apiKey };
 
         res.status(200).json({
-            pixels: seller.pixels, bots: seller.bots, pressels: formattedPressels,
-            checkouts: formattedCheckouts, settings: finalSettings
+            pixels: seller.pixels,
+            bots: seller.bots,
+            pressels: formattedPressels, // Envia as pressels formatadas
+            checkouts: formattedCheckouts,
+            settings: finalSettings
         });
     } catch (error) {
         res.status(500).json({ message: 'Erro ao buscar dados.', error: error.message });
