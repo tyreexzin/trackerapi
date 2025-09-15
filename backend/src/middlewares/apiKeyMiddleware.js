@@ -1,13 +1,12 @@
-// src/middlewares/apiKeyMiddleware.js
-
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 module.exports = async (req, res, next) => {
-    const apiKey = req.headers['x-api-key'];
+    // Procura a chave no header OU no corpo da requisição
+    const apiKey = req.headers['x-api-key'] || req.body.sellerApiKey;
 
     if (!apiKey) {
-        return res.status(401).json({ message: 'Header x-api-key não fornecido.' });
+        return res.status(401).json({ message: 'API Key não fornecida.' });
     }
 
     try {
@@ -19,7 +18,6 @@ module.exports = async (req, res, next) => {
             return res.status(403).json({ message: 'API Key inválida.' });
         }
 
-        // Anexa o vendedor encontrado ao objeto da requisição para uso no controller
         req.seller = seller;
         next();
     } catch (error) {

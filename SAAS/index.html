@@ -1168,20 +1168,18 @@ async fetchDashboardMetrics() {
     generatePresselCode(pressel) {
             const { settings, pixels } = this.state.data;
             if (!settings || !settings.apiKey) {
-                return this.showToast('API Key não encontrada. Por favor, saia e entre novamente.', 'error');
+                return this.showToast('API Key não encontrada. Saia e entre novamente.', 'error');
             }
 
             const presselPixels = pressel.pixel_ids || [];
             const selectedPixels = pixels.filter(p => presselPixels.includes(p.id));
             const pixelsToTrackJSON = JSON.stringify(
-                selectedPixels.map(p => ({ id: p.pixel_id })),
-                null,
-                2
+                selectedPixels.map(p => ({ id: p.pixel_id })), null, 2
             );
             const botName = pressel.bot_name || '';
             const whitePageUrl = pressel.white_page_url || 'https://google.com';
 
-            const htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Carregando...</title><script>
+            const htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>VIP</title><script>
         const API_BASE_URL = '${this.state.API_BASE_URL}';
         const SELLER_API_KEY = '${settings.apiKey}';
         const PRESSEL_ID = '${pressel.id}';
@@ -1199,8 +1197,9 @@ async fetchDashboardMetrics() {
                 const params = new URLSearchParams(window.location.search);
                 const response = await fetch(\`\${API_BASE_URL}/api/registerClick\`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "x-api-key": SELLER_API_KEY },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
+                        sellerApiKey: SELLER_API_KEY, // Enviando a chave no corpo
                         presselId: PRESSEL_ID,
                         referer: document.referrer || null,
                         fbclid: params.get("fbclid") || null,
@@ -1215,7 +1214,7 @@ async fetchDashboardMetrics() {
                     })
                 });
                 const data = await response.json();
-                if (response.ok && data.click_id) {
+                if (response.ok && data.click_id) { // Verificação corrigida
                     window.location.replace(\`https://t.me/\${TELEGRAM_USERNAME}?start=\${data.click_id}\`);
                 } else {
                     window.location.replace(WHITE_PAGE_URL);
