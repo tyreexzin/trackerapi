@@ -1,7 +1,7 @@
-// backend/src/routes/paymentRoutes.js
-
 const express = require('express');
 const router = express.Router();
+
+// Garantimos que os caminhos para os arquivos estão corretos
 const paymentController = require('../controllers/paymentController');
 const apiKeyMiddleware = require('../middlewares/apiKeyMiddleware');
 const authMiddleware = require('../middlewares/authMiddleware');
