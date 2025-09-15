@@ -1,8 +1,7 @@
-// backend/src/index.js
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const axios = require('axios');
 
 // Importa todas as nossas rotas
 const authRoutes = require('./routes/authRoutes');
@@ -43,12 +42,32 @@ app.get('/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
 });
 
-if (!process.env.VERCEL) {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Servidor local rodando na porta ${PORT}`);
-  });
-}
+// --- LÓGICA PARA INICIAR O SERVIDOR ---
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+
+  // --- LÓGICA DE AUTO-PING (apenas em produção no Render) ---
+  const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+  const PING_INTERVALO_MS = 60 * 1000;
+
+  if (RENDER_URL) {
+    const selfPing = async () => {
+      try {
+        await axios.get(`${RENDER_URL}/ping`);
+        console.log(`[Ping] Ping enviado com sucesso para ${RENDER_URL}`);
+      } catch (err) {
+        console.error(`[Ping] Erro no auto-ping: ${err.message}`);
+      }
+    };
+
+    setInterval(selfPing, PING_INTERVALO_MS);
+    console.log(`🔁 Auto-ping configurado para a cada 14 minutos.`);
+  } else {
+    console.log(`[Ping] Auto-ping desativado (não estamos no ambiente Render).`);
+  }
+});
+
 
 // Exportamos o app para a Vercel usar como Serverless Function
 module.exports = app;
