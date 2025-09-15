@@ -1,7 +1,8 @@
-// prisma/schema.prisma
+// backend/prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
@@ -17,9 +18,9 @@ model Seller {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  apiKey String @unique @default(cuid()) // Chave de API única para cada usuário
+  // MUDANÇA: O padrão agora é uuid()
+  apiKey String @unique @default(uuid())
 
-  // Relações
   pixels     Pixel[]
   bots       Bot[]
   pressels   Pressel[]
@@ -32,35 +33,30 @@ model Seller {
 }
 
 model Setting {
-  id      String @id @default(uuid())
-  seller  Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  // MUDANÇA: ID agora é um número auto-incremental
+  id       Int    @id @default(autoincrement())
+  seller   Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   sellerId String @unique
 
-  // Gateways de PIX
-  pix_provider_primary   String?
-  pix_provider_secondary String?
-  pix_provider_tertiary  String?
-
-  pushinpay_token     String?
-  cnpay_public_key    String?
-  cnpay_secret_key    String?
-  oasyfy_public_key   String?
-  oasyfy_secret_key   String?
-  syncpay_client_id   String?
-  syncpay_client_secret String?
-
-  // Gateway de Cartão (Stripe)
-  stripe_public_key String?
-  stripe_secret_key String?
-
-  // Outras Integrações (exemplo, se houver)
-  // utmify_api_token String?
+  pix_provider_primary    String?
+  pix_provider_secondary  String?
+  pix_provider_tertiary   String?
+  pushinpay_token         String?
+  cnpay_public_key        String?
+  cnpay_secret_key        String?
+  oasyfy_public_key       String?
+  oasyfy_secret_key       String?
+  syncpay_client_id       String?
+  syncpay_client_secret   String?
+  stripe_public_key     String?
+  stripe_secret_key     String?
 
   @@map("settings")
 }
 
 model Pixel {
-  id             String   @id @default(uuid())
+  // MUDANÇA: ID agora é um número auto-incremental
+  id             Int      @id @default(autoincrement())
   account_name   String
   pixel_id       String
   meta_api_token String
@@ -74,7 +70,8 @@ model Pixel {
 }
 
 model Bot {
-  id        String   @id @default(uuid())
+  // MUDANÇA: ID agora é um número auto-incremental
+  id        Int      @id @default(autoincrement())
   bot_name  String
   bot_token String
   seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
@@ -85,13 +82,15 @@ model Bot {
 }
 
 model Pressel {
-  id             String   @id @default(uuid())
+  // MUDANÇA: ID agora é um número auto-incremental
+  id             Int      @id @default(autoincrement())
   name           String
   white_page_url String?
   seller         Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   sellerId       String
   bot            Bot      @relation(fields: [botId], references: [id])
-  botId          String
+  // MUDANÇA: botId agora é um número
+  botId          Int
   pixels         Pixel[]  @relation("PresselPixels")
   clicks         Click[]
 
@@ -99,15 +98,16 @@ model Pressel {
 }
 
 model Checkout {
-  id                String   @id @default(uuid())
+  // MUDANÇA: ID agora é um número auto-incremental
+  id                Int      @id @default(autoincrement())
   name              String
   product_name      String
   redirect_url      String
-  value_type        String // "fixed" ou "variable"
+  value_type        String
   fixed_value_cents Int?
   seller            Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   sellerId          String
-
+  
   pixels    Pixel[]    @relation("CheckoutPixels")
   clicks    Click[]
 
@@ -115,18 +115,17 @@ model Checkout {
 }
 
 model Click {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   sellerId  String
 
-  // Origem do clique
-  presselId  String?
+  // MUDANÇA: presselId e checkoutId agora são números
+  presselId  Int?
   pressel    Pressel?  @relation(fields: [presselId], references: [id])
-  checkoutId String?
+  checkoutId Int?
   checkout   Checkout? @relation(fields: [checkoutId], references: [id])
 
-  // Rastreamento
   referer    String?
   user_agent String?
   fbclid     String?
@@ -144,16 +143,17 @@ model Click {
 }
 
 model Transaction {
-  id           String   @id @default(uuid())
+  // MUDANÇA: ID agora é um número auto-incremental
+  id           Int      @id @default(autoincrement())
   clickId      String   @unique
   click        Click    @relation(fields: [clickId], references: [id])
   seller       Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   sellerId     String
-
-  status       String   @default("pending") // pending, paid, failed
+  
+  status       String   @default("pending")
   pix_value    Float
-  provider     String   // pushinpay, stripe, etc.
-  transaction_id_provider String // ID que vem do gateway
+  provider     String
+  transaction_id_provider String
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
