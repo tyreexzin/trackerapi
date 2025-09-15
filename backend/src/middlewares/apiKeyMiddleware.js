@@ -1,11 +1,10 @@
-// backend/src/middlewares/apiKeyMiddleware.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 module.exports = async (req, res, next) => {
-    const apiKey = req.headers['x-api-key'] || req.body.sellerApiKey;
+    const apiKey = req.headers['x-api-key'];
     if (!apiKey) {
-        return res.status(401).json({ message: 'API Key não fornecida.' });
+        return res.status(401).json({ message: 'Header x-api-key não fornecido.' });
     }
     try {
         const seller = await prisma.seller.findUnique({ where: { apiKey } });
@@ -15,6 +14,6 @@ module.exports = async (req, res, next) => {
         req.seller = seller;
         next();
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao validar a API Key.' });
+        res.status(500).json({ message: 'Erro interno ao validar a API Key.' });
     }
 };
